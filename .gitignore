@@ -1,0 +1,113 @@
+# =========================
+# Root / Common
+# =========================
+# OS / Editor junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.swp
+*.swo
+*.orig
+*.tmp
+*~
+.idea/
+.vscode/
+.vscode/*
+
+# Logs & coverage
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+lcov.info
+
+# Env & secrets (keep examples)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Certificates / keys
+*.pem
+*.key
+*.crt
+*.p12
+
+# =========================
+# Frontend (React / Vite)
+# =========================
+frontend/node_modules/
+frontend/.eslintcache
+frontend/.parcel-cache/
+frontend/.cache/
+frontend/.vite/
+frontend/dist/
+frontend/build/
+frontend/.DS_Store
+
+# If using Next.js (in case you switch)
+frontend/.next/
+frontend/out/
+
+# =========================
+# Backend (Flask / Python)
+# =========================
+backend/__pycache__/
+backend/**/*.py[cod]
+backend/*.py[cod]
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/.coverage
+backend/.coverage.*
+backend/htmlcov/
+backend/instance/
+backend/venv/
+backend/.venv/
+backend/.eggs/
+backend/*.egg-info/
+backend/.ipynb_checkpoints/
+
+# Alembic: keep migrations, ignore cache
+backend/migrations/*.pyc
+# (KHÔNG ignore backend/migrations/versions — cần commit các file version)
+
+# SQLite (nếu dùng tạm)
+backend/*.sqlite
+backend/*.db
+
+# =========================
+# Infra / Docker / Postgres
+# =========================
+infra/pgdata/
+infra/*.env
+infra/*-secrets.*
+infra/.terraform/
+terraform.tfstate
+terraform.tfstate.*
+
+# Docker artefacts
+*.pid
+*.seed
+docker-compose.override.yml
+
+# =========================
+# Images / uploads (optional)
+# =========================
+uploads/
+tmp/
+.temp/
+.cache/
+
+# =========================
+# Misc
+# =========================
+# lockfiles (tuỳ quy ước nhóm, để lại nếu bạn muốn commit)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
