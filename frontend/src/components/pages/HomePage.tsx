@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { BenefitsSection } from '@/components/sections/BenefitsSection';
@@ -14,9 +13,19 @@ import { FAQSection } from '@/components/sections/FAQSection';
 import { Footer } from '@/components/layout/Footer';
 
 export default function HomePage() {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Header />
+      <Header isScrolled={isScrolled} />
       <main>
         <HeroSection />
         <BenefitsSection />

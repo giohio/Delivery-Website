@@ -1,13 +1,16 @@
-import { members } from "@wix/members";
-import { Member } from ".";
-
-export const getCurrentMember = async (): Promise<Member | null> => {
+export const getCurrentMember = async (): Promise<any | null> => {
   try {
-    const member = await members.getCurrentMember({ fieldsets: ["FULL"] });
-    if (!member) {
-      console.log('==== No member found');
+    // Mock implementation - replace with actual API call
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      return null;
     }
-    return member.member;
+    // Return mock member data
+    return {
+      id: '1',
+      email: 'user@example.com',
+      name: 'User'
+    };
   } catch (error) {
     console.log(error);
     return null;

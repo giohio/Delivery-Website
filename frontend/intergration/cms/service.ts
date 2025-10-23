@@ -1,5 +1,8 @@
-import { items } from "@wix/data";
-import { WixDataItem } from ".";
+// Mock CMS service - replace with actual implementation
+export interface WixDataItem {
+  _id?: string;
+  [key: string]: any;
+}
 
 
 /**
@@ -14,8 +17,8 @@ export class BaseCrudService {
    */
   static async create<T extends WixDataItem>(collectionId: string, itemData: T): Promise<T> {
     try {
-      const result = await items.insert(collectionId, itemData);
-      return result as T;
+      // Mock implementation
+      return { ...itemData, _id: Date.now().toString() } as T;
     } catch (error) {
       console.error(`Error creating ${collectionId}:`, error);
       throw new Error(
@@ -28,10 +31,10 @@ export class BaseCrudService {
    * Retrieves all items from the collection
    * @returns Promise<items.WixDataResult<T>> - Query result with all items
    */
-  static async getAll<T extends WixDataItem>(collectionId: string): Promise<items.WixDataResult<T>> {
+  static async getAll<T extends WixDataItem>(collectionId: string): Promise<any> {
     try {
-      const result = await items.query(collectionId).find();
-      return result as items.WixDataResult<T>;
+      // Mock implementation
+      return { items: [], totalCount: 0 };
     } catch (error) {
       console.error(`Error fetching ${collectionId}s:`, error);
       throw new Error(
@@ -47,9 +50,8 @@ export class BaseCrudService {
    */
   static async getById<T extends WixDataItem>(collectionId: string, itemId: string): Promise<T | null> {
     try {
-      const result = await items.query(collectionId)
-        .eq("_id", itemId)
-        .find();
+      // Mock implementation
+      const result = { items: [] };
 
       if (result.items.length > 0) {
         return result.items[0] as T;
@@ -74,7 +76,8 @@ export class BaseCrudService {
         throw new Error(`${collectionId} ID is required for update`);
       }
 
-      const result = await items.update(collectionId, itemData);
+      // Mock implementation
+      const result = itemData;
       return result as T;
     } catch (error) {
       console.error(`Error updating ${collectionId}:`, error);
@@ -95,7 +98,8 @@ export class BaseCrudService {
         throw new Error(`${collectionId} ID is required for deletion`);
       }
 
-      const result = await items.remove(collectionId, itemId);
+      // Mock implementation
+      const result = { _id: itemId };
       return result as T;
     } catch (error) {
       console.error(`Error deleting ${collectionId}:`, error);

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Package, CheckCircle, Clock, CreditCard, Plus, Search as SearchIcon, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Package, CheckCircle, Clock, CreditCard, Plus, Search as SearchIcon, User, LogOut, Settings, Bell } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface OrderStats {
   totalOrders: number;
@@ -19,6 +21,9 @@ interface Order {
 }
 
 const CustomerDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [stats] = useState<OrderStats>({
     totalOrders: 3,
     completedOrders: 1,
@@ -86,6 +91,11 @@ const CustomerDashboard: React.FC = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -97,19 +107,44 @@ const CustomerDashboard: React.FC = () => {
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Khách hàng</span>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-12" />
-                </svg>
+              <button className="p-2 text-gray-400 hover:text-gray-600 relative">
+                <Bell className="w-6 h-6" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
               <button className="p-2 text-gray-400 hover:text-gray-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+                <Settings className="w-6 h-6" />
               </button>
-              <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-gray-600" />
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center hover:bg-gray-400 transition-colors"
+                >
+                  <User className="w-5 h-5 text-gray-600" />
+                </button>
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
+                    <div className="px-4 py-2 border-b">
+                      <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'User'}</p>
+                      <p className="text-xs text-gray-500">{user?.email || 'email@example.com'}</p>
+                    </div>
+                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                      <User className="w-4 h-4 mr-2" />
+                      Hồ sơ cá nhân
+                    </button>
+                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Cài đặt
+                    </button>
+                    <div className="border-t my-1"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -120,7 +155,7 @@ const CustomerDashboard: React.FC = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Chào mừng trở lại, Soul Knight!
+            Chào mừng trở lại, {user?.fullName || 'User'}!
           </h2>
           <p className="text-gray-600">Quản lý đơn hàng và theo dõi giao hàng của bạn</p>
         </div>

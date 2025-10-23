@@ -1,8 +1,8 @@
-import { MemberProvider } from '@/integrations';
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
+import { MemberProvider } from '../../intergration';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { ScrollToTop } from '@/lib/scroll-to-top';
-import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
-import HomePage from '@/components/pages/HomePage';
+import ErrorPage from '../../intergration/errorHandlers/ErrorPage';
+// import HomePage from '@/components/pages/HomePage';
 import CustomerDashboard from '@/components/pages/CustomerDashboard';
 import CourierDashboard from '@/components/pages/CourierDashboard';
 import MerchantDashboard from '@/components/pages/MerchantDashboard';
@@ -12,6 +12,7 @@ import { MemberProtectedRoute } from '@/components/ui/member-protected-route';
 
 // Layout component that includes ScrollToTop
 function Layout() {
+  console.log('Layout rendering');
   return (
     <>
       <ScrollToTop />
@@ -28,16 +29,29 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <HomePage />,
+        element: (
+          <div style={{ minHeight: '100vh', padding: '2rem', backgroundColor: '#f3f4f6' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>FastDelivery</h1>
+            <p style={{ marginBottom: '1rem' }}>Welcome to FastDelivery!</p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <a href="/customer" style={{ padding: '0.5rem 1rem', backgroundColor: '#3b82f6', color: 'white', borderRadius: '0.5rem', textDecoration: 'none' }}>
+                Customer Dashboard
+              </a>
+              <a href="/admin" style={{ padding: '0.5rem 1rem', backgroundColor: '#ef4444', color: 'white', borderRadius: '0.5rem', textDecoration: 'none' }}>
+                Admin Dashboard
+              </a>
+            </div>
+          </div>
+        ),
       },
 
       {
+        path: "customer",
+        element: <CustomerDashboard />,
+      },
+      {
         path: "dashboard/customer",
-        element: (
-          <MemberProtectedRoute messageToSignIn="Đăng nhập để truy cập bảng điều khiển khách hàng">
-            <CustomerDashboard />
-          </MemberProtectedRoute>
-        ),
+        element: <CustomerDashboard />,
       },
       {
         path: "dashboard/courier",
@@ -56,22 +70,16 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "dashboard/admin",
-        element: (
-          <MemberProtectedRoute messageToSignIn="Đăng nhập để truy cập bảng điều khiển quản trị">
-            <AdminDashboard />
-          </MemberProtectedRoute>
-        ),
+        path: "admin",
+        element: <AdminDashboard />,
       },
       {
-        path: "*",
-        element: <Navigate to="/" replace />,
+        path: "test-admin",
+        element: <div style={{ padding: '50px', fontSize: '24px' }}>Admin route is working! Try /admin</div>,
       },
     ],
   },
-], {
-  basename: import.meta.env.BASE_NAME,
-});
+]);
 
 export default function AppRouter() {
   return (

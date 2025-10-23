@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useMember } from '@/integrations';
+import { adminApiService } from '@/services/adminApi';
 import { 
   Users, 
   Package, 
@@ -12,46 +12,37 @@ import {
   CheckCircle,
   Clock,
   BarChart3,
-  PieChart,
   Activity,
   Settings,
   Bell,
   Shield,
-  Database,
-  Globe,
   Zap,
   UserCheck,
   UserX,
   Eye,
   Edit,
-  Trash2,
   Plus,
-  Download,
-  Filter,
-  Search,
-  Calendar
+  Search
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui';
 
-// Mock data for admin dashboard
-const systemStats = {
-  totalUsers: 15420,
-  activeDrivers: 1250,
-  activeMerchants: 890,
-  totalOrders: 45680,
-  completedOrders: 42150,
-  pendingOrders: 2180,
-  cancelledOrders: 1350,
-  totalRevenue: 125000000,
-  systemUptime: 99.8,
-  averageDeliveryTime: 28,
-  customerSatisfaction: 4.7
-};
+interface SystemStats {
+  totalUsers: number;
+  activeDrivers: number;
+  activeMerchants: number;
+  totalOrders: number;
+  completedOrders: number;
+  pendingOrders: number;
+  cancelledOrders: number;
+  totalRevenue: number;
+  systemUptime: number;
+  averageDeliveryTime: number;
+  customerSatisfaction: number;
+}
 
 const recentActivities = [
   {
@@ -84,54 +75,25 @@ const recentActivities = [
   }
 ];
 
-const mockUsers = [
-  {
-    id: 1,
-    name: 'Nguyễn Văn A',
-    email: 'nguyenvana@email.com',
-    role: 'driver',
-    status: 'active',
-    joinDate: '2024-01-15',
-    totalOrders: 156,
-    rating: 4.8
-  },
-  {
-    id: 2,
-    name: 'Shop Fashion ABC',
-    email: 'shop@abc.com',
-    role: 'merchant',
-    status: 'active',
-    joinDate: '2024-01-10',
-    totalOrders: 89,
-    rating: 4.6
-  },
-  {
-    id: 3,
-    name: 'Trần Thị B',
-    email: 'tranthib@email.com',
-    role: 'customer',
-    status: 'active',
-    joinDate: '2024-01-20',
-    totalOrders: 23,
-    rating: 4.9
-  },
-  {
-    id: 4,
-    name: 'Lê Văn C',
-    email: 'levanc@email.com',
-    role: 'driver',
-    status: 'suspended',
-    joinDate: '2024-01-05',
-    totalOrders: 45,
-    rating: 3.2
-  }
-];
+interface UserData {
+  user_id: number;
+  full_name: string;
+  email: string;
+  phone: string;
+  role_name: string;
+  is_active: boolean;
+  created_at: string;
+  totalOrders?: number;
+  rating?: number;
+}
 
 const getRoleColor = (role: string) => {
-  switch (role) {
+  const roleLower = role.toLowerCase();
+  switch (roleLower) {
     case 'admin':
       return 'bg-red-100 text-red-800';
     case 'driver':
+    case 'shipper':
       return 'bg-blue-100 text-blue-800';
     case 'merchant':
       return 'bg-green-100 text-green-800';
@@ -142,17 +104,31 @@ const getRoleColor = (role: string) => {
   }
 };
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'active':
-      return 'bg-green-100 text-green-800';
-    case 'suspended':
-      return 'bg-red-100 text-red-800';
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
+const getRoleLabel = (role: string) => {
+  const roleLower = role.toLowerCase();
+  switch (roleLower) {
+    case 'admin':
+      return 'Admin';
+    case 'driver':
+    case 'shipper':
+      return 'Tài xế';
+    case 'merchant':
+      return 'Merchant';
+    case 'customer':
+      return 'Khách hàng';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return role;
   }
+};
+
+const getStatusColor = (isActive: boolean) => {
+  return isActive 
+    ? 'bg-green-100 text-green-800' 
+    : 'bg-red-100 text-red-800';
+};
+
+const getStatusLabel = (isActive: boolean) => {
+  return isActive ? 'Hoạt động' : 'Tạm khóa';
 };
 
 const getActivityIcon = (type: string) => {
@@ -186,18 +162,83 @@ const getActivityColor = (status: string) => {
 };
 
 export default function AdminDashboard() {
-  const { member } = useMember();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [systemStats, setSystemStats] = useState<SystemStats>({
+    totalUsers: 0,
+    activeDrivers: 0,
+    activeMerchants: 0,
+    totalOrders: 0,
+    completedOrders: 0,
+    pendingOrders: 0,
+    cancelledOrders: 0,
+    totalRevenue: 0,
+    systemUptime: 99.8,
+    averageDeliveryTime: 28,
+    customerSatisfaction: 4.7
+  });
 
-  const filteredUsers = mockUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [summaryData, usersData] = await Promise.all([
+        adminApiService.getSummary(),
+        adminApiService.getUsers()
+      ]);
+      
+      setUsers(usersData);
+      
+      // Calculate stats from summary
+      const drivers = usersData.filter(u => u.role_name.toLowerCase() === 'driver' || u.role_name.toLowerCase() === 'shipper');
+      const merchants = usersData.filter(u => u.role_name.toLowerCase() === 'merchant');
+      
+      setSystemStats({
+        totalUsers: summaryData.total_users || usersData.length,
+        activeDrivers: drivers.filter(d => d.is_active).length,
+        activeMerchants: merchants.filter(m => m.is_active).length,
+        totalOrders: summaryData.total_orders || 0,
+        completedOrders: summaryData.total_deliveries || 0,
+        pendingOrders: (summaryData.total_orders || 0) - (summaryData.total_deliveries || 0),
+        cancelledOrders: 0,
+        totalRevenue: summaryData.revenue || 0,
+        systemUptime: 99.8,
+        averageDeliveryTime: 28,
+        customerSatisfaction: 4.7
+      });
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+    const matchesRole = roleFilter === 'all' || user.role_name.toLowerCase() === roleFilter.toLowerCase();
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && user.is_active) ||
+                         (statusFilter === 'suspended' && !user.is_active);
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-light-grey">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -225,9 +266,8 @@ export default function AdminDashboard() {
                 <Settings className="w-4 h-4" />
               </Button>
               <Avatar className="w-8 h-8">
-                <AvatarImage src={member?.profile?.photo?.url} />
                 <AvatarFallback className="bg-red-100 text-red-700">
-                  {member?.profile?.nickname?.charAt(0) || member?.contact?.firstName?.charAt(0) || 'A'}
+                  A
                 </AvatarFallback>
               </Avatar>
             </div>
@@ -469,6 +509,7 @@ export default function AdminDashboard() {
                   <option value="all">Tất cả vai trò</option>
                   <option value="customer">Khách hàng</option>
                   <option value="driver">Tài xế</option>
+                  <option value="shipper">Tài xế</option>
                   <option value="merchant">Merchant</option>
                   <option value="admin">Admin</option>
                 </select>
@@ -519,7 +560,7 @@ export default function AdminDashboard() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredUsers.map((user, index) => (
                     <motion.tr
-                      key={user.id}
+                      key={user.user_id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -528,50 +569,49 @@ export default function AdminDashboard() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <Avatar className="w-10 h-10 mr-3">
-                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                            <AvatarFallback className="bg-blue-100 text-blue-700">
+                              {user.full_name.charAt(0)}
+                            </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="text-sm font-medium text-foreground">{user.name}</div>
+                            <div className="text-sm font-medium text-foreground">{user.full_name}</div>
                             <div className="text-sm text-light-grey">{user.email}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge className={getRoleColor(user.role)}>
-                          {user.role === 'customer' ? 'Khách hàng' :
-                           user.role === 'driver' ? 'Tài xế' :
-                           user.role === 'merchant' ? 'Merchant' : 'Admin'}
+                        <Badge className={getRoleColor(user.role_name)}>
+                          {getRoleLabel(user.role_name)}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge className={getStatusColor(user.status)}>
-                          {user.status === 'active' ? 'Hoạt động' :
-                           user.status === 'suspended' ? 'Tạm khóa' : 'Chờ duyệt'}
+                        <Badge className={getStatusColor(user.is_active)}>
+                          {getStatusLabel(user.is_active)}
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-light-grey">
-                        {new Date(user.joinDate).toLocaleDateString('vi-VN')}
+                        {new Date(user.created_at).toLocaleDateString('vi-VN')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {user.totalOrders}
+                        {user.totalOrders || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {user.rating}/5
+                        {user.rating ? `${user.rating}/5` : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" title="Xem chi tiết">
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" title="Chỉnh sửa">
                             <Edit className="w-4 h-4" />
                           </Button>
-                          {user.status === 'active' ? (
-                            <Button variant="ghost" size="sm" className="text-red-600">
+                          {user.is_active ? (
+                            <Button variant="ghost" size="sm" className="text-red-600" title="Khóa tài khoản">
                               <UserX className="w-4 h-4" />
                             </Button>
                           ) : (
-                            <Button variant="ghost" size="sm" className="text-green-600">
+                            <Button variant="ghost" size="sm" className="text-green-600" title="Kích hoạt tài khoản">
                               <UserCheck className="w-4 h-4" />
                             </Button>
                           )}
