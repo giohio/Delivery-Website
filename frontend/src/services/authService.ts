@@ -6,6 +6,7 @@ import {
   AuthError
 } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '../config/firebase';
+const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:5000';
 
 export interface AuthUser {
   email: string;
@@ -52,6 +53,19 @@ const handleAccountLinking = async (error: AuthError, currentProvider: string): 
 export const signInWithGoogle = async (): Promise<AuthUser> => {
   try {
     const result: UserCredential = await signInWithPopup(auth, googleProvider);
+    const idToken = await result.user.getIdToken();
+    const res = await fetch(`${API_BASE}/auth/firebase`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_token: idToken })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || 'Đăng nhập Firebase thất bại');
+    }
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+    }
     return convertFirebaseUser(result.user);
   } catch (error: any) {
     console.error('Google sign in error:', error);
@@ -74,6 +88,19 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
 export const signInWithFacebook = async (): Promise<AuthUser> => {
   try {
     const result: UserCredential = await signInWithPopup(auth, facebookProvider);
+    const idToken = await result.user.getIdToken();
+    const res = await fetch(`${API_BASE}/auth/firebase`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_token: idToken })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || 'Đăng nhập Firebase thất bại');
+    }
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+    }
     return convertFirebaseUser(result.user);
   } catch (error: any) {
     console.error('Facebook sign in error:', error);

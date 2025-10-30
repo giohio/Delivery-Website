@@ -45,22 +45,37 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:5000';
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Integrate with backend API
-    console.log('Login with:', formData);
-    
-    // Extract name from email (before @)
-    const fullName = formData.email.split('@')[0];
-    
-    // Save user info to context
-    login({
-      email: formData.email,
-      fullName: fullName.charAt(0).toUpperCase() + fullName.slice(1)
-    });
-    
-    // Redirect to home page
-    navigate('/');
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, password: formData.password })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || 'Đăng nhập thất bại');
+      }
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      const backendUser = data.user;
+      const displayName = backendUser?.username || (formData.email.split('@')[0]);
+      login({
+        email: backendUser?.email || formData.email,
+        fullName: displayName
+      });
+      navigate('/');
+    } catch (err: any) {
+      setError(err.message || 'Đăng nhập thất bại');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
