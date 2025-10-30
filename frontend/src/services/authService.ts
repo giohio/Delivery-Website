@@ -12,6 +12,9 @@ export interface AuthUser {
   email: string;
   fullName: string;
   avatar?: string;
+  role_id?: number;
+  role_name?: string;
+  user_id?: number;
 }
 
 // Convert Firebase User to our AuthUser format
@@ -66,7 +69,24 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
     if (data.token) {
       localStorage.setItem('token', data.token);
     }
-    return convertFirebaseUser(result.user);
+    // Get role_name from backend response
+    const getRoleName = (roleId: number): string => {
+      const roleMap: { [key: number]: string } = {
+        1: 'admin',
+        2: 'merchant',
+        3: 'shipper',
+        4: 'customer'
+      };
+      return roleMap[roleId] || 'customer';
+    };
+    
+    const authUser = convertFirebaseUser(result.user);
+    if (data.user) {
+      authUser.role_id = data.user.role_id;
+      authUser.role_name = getRoleName(data.user.role_id);
+      authUser.user_id = data.user.user_id;
+    }
+    return authUser;
   } catch (error: any) {
     console.error('Google sign in error:', error);
     
@@ -101,7 +121,24 @@ export const signInWithFacebook = async (): Promise<AuthUser> => {
     if (data.token) {
       localStorage.setItem('token', data.token);
     }
-    return convertFirebaseUser(result.user);
+    // Get role_name from backend response
+    const getRoleName = (roleId: number): string => {
+      const roleMap: { [key: number]: string } = {
+        1: 'admin',
+        2: 'merchant',
+        3: 'shipper',
+        4: 'customer'
+      };
+      return roleMap[roleId] || 'customer';
+    };
+    
+    const authUser = convertFirebaseUser(result.user);
+    if (data.user) {
+      authUser.role_id = data.user.role_id;
+      authUser.role_name = getRoleName(data.user.role_id);
+      authUser.user_id = data.user.user_id;
+    }
+    return authUser;
   } catch (error: any) {
     console.error('Facebook sign in error:', error);
     

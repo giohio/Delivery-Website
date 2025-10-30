@@ -4,13 +4,18 @@ interface User {
   email: string;
   fullName: string;
   avatar?: string;
+  role_id?: number;
+  role_name?: string;
+  user_id?: number;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (userData: User) => void;
+  login: (userData: User, token?: string) => void;
   logout: () => void;
+  getToken: () => string | null;
+  getUserRole: () => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,14 +31,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const login = (userData: User) => {
+  const login = (userData: User, token?: string) => {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+    if (token) {
+      localStorage.setItem('token', token);
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+  };
+
+  const getToken = () => {
+    return localStorage.getItem('token');
+  };
+
+  const getUserRole = () => {
+    return user?.role_name || null;
   };
 
   return (
@@ -42,7 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isAuthenticated: !!user,
         login,
-        logout
+        logout,
+        getToken,
+        getUserRole
       }}
     >
       {children}

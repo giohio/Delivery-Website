@@ -20,8 +20,9 @@ const Login: React.FC = () => {
       setLoading(true);
       setError(null);
       const userData = await signInWithGoogle();
+      const roleName = userData.role_name || 'customer';
       login(userData);
-      navigate('/');
+      redirectToRoleDashboard(roleName);
     } catch (err: any) {
       setError(err.message || 'Đăng nhập bằng Google thất bại');
       console.error('Google login error:', err);
@@ -35,8 +36,9 @@ const Login: React.FC = () => {
       setLoading(true);
       setError(null);
       const userData = await signInWithFacebook();
+      const roleName = userData.role_name || 'customer';
       login(userData);
-      navigate('/');
+      redirectToRoleDashboard(roleName);
     } catch (err: any) {
       setError(err.message || 'Đăng nhập bằng Facebook thất bại');
       console.error('Facebook login error:', err);
@@ -46,6 +48,37 @@ const Login: React.FC = () => {
   };
 
   const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:5000';
+
+  // Helper function to map role_id to role_name
+  const getRoleName = async (roleId: number): Promise<string> => {
+    const roleMap: { [key: number]: string } = {
+      1: 'admin',
+      2: 'merchant',
+      3: 'shipper',
+      4: 'customer'
+    };
+    return roleMap[roleId] || 'customer';
+  };
+
+  // Helper function to redirect based on role
+  const redirectToRoleDashboard = (roleName: string) => {
+    switch (roleName.toLowerCase()) {
+      case 'admin':
+        navigate('/admin');
+        break;
+      case 'merchant':
+        navigate('/merchant');
+        break;
+      case 'shipper':
+      case 'courier':
+        navigate('/courier');
+        break;
+      case 'customer':
+      default:
+        navigate('/customer');
+        break;
+    }
+  };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,12 +98,19 @@ const Login: React.FC = () => {
         localStorage.setItem('token', data.token);
       }
       const backendUser = data.user;
-      const displayName = backendUser?.username || (formData.email.split('@')[0]);
-      login({
+      const displayName = backendUser?.username || backendUser?.full_name || (formData.email.split('@')[0]);
+      const roleName = await getRoleName(backendUser?.role_id || 4);
+      
+      const userData = {
         email: backendUser?.email || formData.email,
-        fullName: displayName
-      });
-      navigate('/');
+        fullName: displayName,
+        role_id: backendUser?.role_id,
+        role_name: roleName,
+        user_id: backendUser?.user_id
+      };
+      
+      login(userData, data.token);
+      redirectToRoleDashboard(roleName);
     } catch (err: any) {
       setError(err.message || 'Đăng nhập thất bại');
     } finally {

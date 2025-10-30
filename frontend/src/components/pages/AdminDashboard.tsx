@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { adminApiService } from '@/services/adminApi';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Users, 
   Package, 
@@ -22,7 +24,9 @@ import {
   Eye,
   Edit,
   Plus,
-  Search
+  Search,
+  LogOut,
+  User
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -162,11 +166,29 @@ const getActivityColor = (status: string) => {
 };
 
 export default function AdminDashboard() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const notifications = [
+    { id: 1, title: 'Cảnh báo hệ thống', message: 'CPU sử dụng đang cao: 85%', time: '2 phút trước', unread: true },
+    { id: 2, title: 'Người dùng mới', message: '5 tài xế mới đăng ký hôm nay', time: '10 phút trước', unread: true },
+    { id: 3, title: 'Báo cáo doanh thu', message: 'Báo cáo tháng 10 đã sẵn sàng', time: '1 giờ trước', unread: false },
+  ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const [systemStats, setSystemStats] = useState<SystemStats>({
     totalUsers: 0,
     activeDrivers: 0,
@@ -183,15 +205,21 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Loading admin dashboard data...');
+      
       const [summaryData, usersData] = await Promise.all([
         adminApiService.getSummary(),
         adminApiService.getUsers()
       ]);
+      
+      console.log('✅ Received users from API:', usersData);
+      console.log('✅ Received summary from API:', summaryData);
       
       setUsers(usersData);
       
@@ -199,7 +227,7 @@ export default function AdminDashboard() {
       const drivers = usersData.filter(u => u.role_name.toLowerCase() === 'driver' || u.role_name.toLowerCase() === 'shipper');
       const merchants = usersData.filter(u => u.role_name.toLowerCase() === 'merchant');
       
-      setSystemStats({
+      const calculatedStats = {
         totalUsers: summaryData.total_users || usersData.length,
         activeDrivers: drivers.filter(d => d.is_active).length,
         activeMerchants: merchants.filter(m => m.is_active).length,
@@ -211,9 +239,12 @@ export default function AdminDashboard() {
         systemUptime: 99.8,
         averageDeliveryTime: 28,
         customerSatisfaction: 4.7
-      });
+      };
+      
+      console.log('📊 Calculated stats:', calculatedStats);
+      setSystemStats(calculatedStats);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      console.error('❌ Error loading dashboard data:', error);
     } finally {
       setLoading(false);
     }
@@ -259,17 +290,91 @@ export default function AdminDashboard() {
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-light-grey">System Online</span>
               </div>
-              <Button variant="ghost" size="sm">
-                <Bell className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm">
+              
+              {/* Notifications */}
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative"
+                >
+                  <Bell className="w-4 h-4" />
+                  {notifications.filter(n => n.unread).length > 0 && (
+                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                </Button>
+                
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                    <div className="p-4 border-b">
+                      <h3 className="font-semibold">Thông báo</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.map(notif => (
+                        <div key={notif.id} className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${notif.unread ? 'bg-blue-50' : ''}`}>
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="font-medium text-sm">{notif.title}</p>
+                            {notif.unread && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
+                          </div>
+                          <p className="text-sm text-gray-600">{notif.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-3 text-center border-t">
+                      <button className="text-sm text-blue-600 hover:text-blue-800">Xem tất cả</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Settings */}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowSettings(true)}
+              >
                 <Settings className="w-4 h-4" />
               </Button>
-              <Avatar className="w-8 h-8">
-                <AvatarFallback className="bg-red-100 text-red-700">
-                  A
-                </AvatarFallback>
-              </Avatar>
+              
+              {/* Avatar with dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="w-8 h-8 bg-red-100 text-red-700 rounded-full flex items-center justify-center font-medium hover:bg-red-200 transition-colors"
+                >
+                  {user?.fullName?.charAt(0).toUpperCase() || 'A'}
+                </button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
+                    <div className="px-4 py-2 border-b">
+                      <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'Admin'}</p>
+                      <p className="text-xs text-gray-500">{user?.email || 'admin@example.com'}</p>
+                    </div>
+                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                      <User className="w-4 h-4 mr-2" />
+                      Hồ sơ cá nhân
+                    </button>
+                    <button 
+                      onClick={() => { setShowUserMenu(false); setShowSettings(true); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Cài đặt
+                    </button>
+                    <div className="border-t my-1"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -632,6 +737,56 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Cài đặt hệ thống</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Bảo trì tự động</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Cảnh báo Email</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Chế độ bảo mật cao</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Thời gian backup (giờ)</label>
+                <input type="time" defaultValue="02:00" className="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Mức độ log</label>
+                <select className="w-full border rounded px-3 py-2">
+                  <option>Info</option>
+                  <option>Warning</option>
+                  <option>Error</option>
+                  <option>Debug</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Session timeout (phút)</label>
+                <input type="number" defaultValue="30" className="w-full border rounded px-3 py-2" />
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Đóng</button>
+              <button onClick={() => { alert('Đã lưu cài đặt hệ thống!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

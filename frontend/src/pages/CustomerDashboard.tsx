@@ -24,6 +24,19 @@ const CustomerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const notifications = [
+    { id: 1, title: 'Đơn hàng đang giao', message: 'Đơn #FD2024001235 sắp đến nơi', time: '5 phút trước', unread: true },
+    { id: 2, title: 'Ưu đãi mới', message: 'Giảm 20% cho đơn hàng tiếp theo', time: '1 giờ trước', unread: true },
+    { id: 3, title: 'Giao hàng thành công', message: 'Đơn #FD2024001234 đã hoàn thành', time: '2 giờ trước', unread: false },
+  ];
   const [stats] = useState<OrderStats>({
     totalOrders: 3,
     completedOrders: 1,
@@ -107,11 +120,47 @@ const CustomerDashboard: React.FC = () => {
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Khách hàng</span>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600 relative">
-                <Bell className="w-6 h-6" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600">
+              {/* Notifications */}
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 text-gray-400 hover:text-gray-600 relative"
+                >
+                  <Bell className="w-6 h-6" />
+                  {notifications.filter(n => n.unread).length > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                </button>
+                
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                    <div className="p-4 border-b">
+                      <h3 className="font-semibold">Thông báo</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.map(notif => (
+                        <div key={notif.id} className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${notif.unread ? 'bg-blue-50' : ''}`}>
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="font-medium text-sm">{notif.title}</p>
+                            {notif.unread && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
+                          </div>
+                          <p className="text-sm text-gray-600">{notif.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-3 text-center border-t">
+                      <button className="text-sm text-blue-600 hover:text-blue-800">Xem tất cả</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Settings */}
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="p-2 text-gray-400 hover:text-gray-600"
+              >
                 <Settings className="w-6 h-6" />
               </button>
               <div className="relative">
@@ -127,11 +176,17 @@ const CustomerDashboard: React.FC = () => {
                       <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'User'}</p>
                       <p className="text-xs text-gray-500">{user?.email || 'email@example.com'}</p>
                     </div>
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <button 
+                      onClick={() => { setShowUserMenu(false); setShowProfileModal(true); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
                       <User className="w-4 h-4 mr-2" />
                       Hồ sơ cá nhân
                     </button>
-                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <button 
+                      onClick={() => { setShowUserMenu(false); setShowSettings(true); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
                       <Settings className="w-4 h-4 mr-2" />
                       Cài đặt
                     </button>
@@ -216,19 +271,25 @@ const CustomerDashboard: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Thao tác nhanh</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button 
-              onClick={() => alert('Tính năng tạo đơn hàng mới sẽ được phát triển sau')}
+              onClick={() => setShowCreateOrderModal(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-lg flex flex-col items-center justify-center space-y-2 transition-colors"
             >
               <Plus className="w-8 h-8" />
               <span className="font-medium">Tạo đơn hàng mới</span>
             </button>
             
-            <button className="bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-700 p-6 rounded-lg flex flex-col items-center justify-center space-y-2 transition-colors">
+            <button 
+              onClick={() => document.getElementById('order-search')?.focus()}
+              className="bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-700 p-6 rounded-lg flex flex-col items-center justify-center space-y-2 transition-colors"
+            >
               <SearchIcon className="w-8 h-8" />
               <span className="font-medium">Tra cứu đơn hàng</span>
             </button>
             
-            <button className="bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-700 p-6 rounded-lg flex flex-col items-center justify-center space-y-2 transition-colors">
+            <button 
+              onClick={() => setShowProfileModal(true)}
+              className="bg-white hover:bg-gray-50 border-2 border-gray-200 text-gray-700 p-6 rounded-lg flex flex-col items-center justify-center space-y-2 transition-colors"
+            >
               <User className="w-8 h-8" />
               <span className="font-medium">Cập nhật hồ sơ</span>
             </button>
@@ -245,6 +306,7 @@ const CustomerDashboard: React.FC = () => {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
+                    id="order-search"
                     type="text"
                     placeholder="Tìm kiếm đơn hàng..."
                     className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -307,11 +369,23 @@ const CustomerDashboard: React.FC = () => {
                       {order.price.toLocaleString()} VND
                     </div>
                     <div className="space-x-2">
-                      <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                      <button 
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowOrderDetailModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
                         Chi tiết
                       </button>
                       {order.status === 'pending' && (
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium">
+                        <button 
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setShowTrackingModal(true);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm font-medium"
+                        >
                           Theo dõi
                         </button>
                       )}
@@ -324,6 +398,158 @@ const CustomerDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Order Modal */}
+      {showCreateOrderModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Tạo đơn hàng mới</h3>
+            <form className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Địa chỉ lấy hàng</label>
+                <input type="text" className="w-full border rounded px-3 py-2" placeholder="Nhập địa chỉ lấy hàng" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Địa chỉ giao hàng</label>
+                <input type="text" className="w-full border rounded px-3 py-2" placeholder="Nhập địa chỉ giao hàng" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Mô tả hàng hóa</label>
+                <textarea className="w-full border rounded px-3 py-2" rows={3} placeholder="Mô tả hàng hóa"></textarea>
+              </div>
+              <div className="flex space-x-3">
+                <button type="button" onClick={() => setShowCreateOrderModal(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Hủy</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Tạo đơn</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Order Detail Modal */}
+      {showOrderDetailModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-lg w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Chi tiết đơn hàng #{selectedOrder.id}</h3>
+            <div className="space-y-3">
+              <div><strong>Ngày tạo:</strong> {selectedOrder.date}</div>
+              <div><strong>Từ:</strong> {selectedOrder.from}</div>
+              <div><strong>Đến:</strong> {selectedOrder.to}</div>
+              <div><strong>Hàng hóa:</strong> {selectedOrder.items}</div>
+              <div><strong>Giá:</strong> {selectedOrder.price.toLocaleString()} VND</div>
+              <div><strong>Trạng thái:</strong> <span className={`px-2 py-1 rounded ${getStatusColor(selectedOrder.status)}`}>{getStatusText(selectedOrder.status)}</span></div>
+            </div>
+            <button onClick={() => setShowOrderDetailModal(false)} className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Đóng</button>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Update Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Cập nhật hồ sơ</h3>
+            <form className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Họ tên</label>
+                <input type="text" defaultValue={user?.fullName} className="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input type="email" defaultValue={user?.email} className="w-full border rounded px-3 py-2" disabled />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Số điện thoại</label>
+                <input type="tel" className="w-full border rounded px-3 py-2" placeholder="Nhập số điện thoại" />
+              </div>
+              <div className="flex space-x-3">
+                <button type="button" onClick={() => setShowProfileModal(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Hủy</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Tracking Modal */}
+      {showTrackingModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Theo dõi đơn hàng #{selectedOrder.id}</h3>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
+                <div>
+                  <p className="font-medium">Đã tạo đơn</p>
+                  <p className="text-sm text-gray-500">{selectedOrder.date}</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-3 h-3 bg-blue-500 rounded-full mt-1"></div>
+                <div>
+                  <p className="font-medium">Đang xử lý</p>
+                  <p className="text-sm text-gray-500">Đang tìm tài xế phù hợp</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-3 h-3 bg-gray-300 rounded-full mt-1"></div>
+                <div>
+                  <p className="font-medium text-gray-400">Chờ lấy hàng</p>
+                </div>
+              </div>
+            </div>
+            <button onClick={() => setShowTrackingModal(false)} className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Đóng</button>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Cài đặt</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Thông báo đơn hàng</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Nhận khuyến mãi</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Lưu địa chỉ thường dùng</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Ngôn ngữ</label>
+                <select className="w-full border rounded px-3 py-2">
+                  <option>Tiếng Việt</option>
+                  <option>English</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Phương thức thanh toán mặc định</label>
+                <select className="w-full border rounded px-3 py-2">
+                  <option>Tiền mặt</option>
+                  <option>Thẻ ngân hàng</option>
+                  <option>Ví điện tử</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Đóng</button>
+              <button onClick={() => { alert('Đã lưu cài đặt!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

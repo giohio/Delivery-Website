@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Package, DollarSign, Navigation, Star, Clock, MapPin, Phone, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Package, DollarSign, Navigation, Star, Clock, MapPin, Phone, CheckCircle, LogOut, User, Settings as SettingsIcon } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Order {
   id: string;
@@ -24,6 +26,25 @@ interface Order {
 
 const CourierDashboard: React.FC = () => {
   const [isOnline, setIsOnline] = useState(true);
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const notifications = [
+    { id: 1, title: 'Đơn hàng mới', message: 'Có 2 đơn hàng khả dụng gần bạn', time: '3 phút trước', unread: true },
+    { id: 2, title: 'Đã nhận tiền', message: 'Bạn vừa nhận 18,000 VND từ đơn #FD001235', time: '15 phút trước', unread: true },
+    { id: 3, title: 'Đánh giá 5 sao', message: 'Khách hàng vừa đánh giá 5 sao cho bạn', time: '1 giờ trước', unread: false },
+  ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   // Mock data
   const stats = {
@@ -92,18 +113,30 @@ const CourierDashboard: React.FC = () => {
   ];
 
   const handleNavigate = () => {
-    // TODO: Open navigation/maps
-    alert('Mở điều hướng đến địa chỉ giao hàng');
+    if (currentOrder) {
+      // Open Google Maps with delivery address
+      const address = encodeURIComponent(currentOrder.delivery.address);
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${address}`, '_blank');
+    }
   };
 
   const handleCompleteDelivery = () => {
-    // TODO: Mark order as completed
-    alert('Xác nhận hoàn thành giao hàng');
+    if (confirm('Xác nhận đã hoàn thành giao hàng?')) {
+      alert('Đơn hàng đã được đánh dấu hoàn thành!');
+      // In real app: call API to update delivery status
+    }
   };
 
-  const handleAcceptOrder = (orderId: string) => {
-    // TODO: Accept order
-    alert(`Nhận đơn hàng ${orderId}`);
+  const handleAcceptOrder = (order: Order) => {
+    if (confirm(`Bạn có muốn nhận đơn hàng ${order.id}?`)) {
+      alert(`Đã nhận đơn hàng ${order.id}. Hãy đến địa chỉ lấy hàng!`);
+      // In real app: call API to accept order
+    }
+  };
+
+  const handleViewOrderDetail = (order: Order) => {
+    setSelectedOrder(order);
+    setShowOrderDetailModal(true);
   };
 
   return (
@@ -141,24 +174,90 @@ const CourierDashboard: React.FC = () => {
               </div>
 
               {/* Notifications */}
-              <button className="p-2 hover:bg-gray-100 rounded-full relative">
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 hover:bg-gray-100 rounded-full relative"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {notifications.filter(n => n.unread).length > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                </button>
+                
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                    <div className="p-4 border-b">
+                      <h3 className="font-semibold">Thông báo</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.map(notif => (
+                        <div key={notif.id} className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${notif.unread ? 'bg-blue-50' : ''}`}>
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="font-medium text-sm">{notif.title}</p>
+                            {notif.unread && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
+                          </div>
+                          <p className="text-sm text-gray-600">{notif.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-3 text-center border-t">
+                      <button className="text-sm text-blue-600 hover:text-blue-800">Xem tất cả</button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Settings */}
-              <button className="p-2 hover:bg-gray-100 rounded-full">
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </button>
 
-              {/* Avatar */}
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
-                SK
+              {/* Avatar with dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium hover:bg-blue-700 transition-colors"
+                >
+                  {user?.fullName?.charAt(0).toUpperCase() || 'SK'}
+                </button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
+                    <div className="px-4 py-2 border-b">
+                      <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'Tài xế'}</p>
+                      <p className="text-xs text-gray-500">{user?.email || 'courier@example.com'}</p>
+                    </div>
+                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                      <User className="w-4 h-4 mr-2" />
+                      Hồ sơ cá nhân
+                    </button>
+                    <button 
+                      onClick={() => { setShowUserMenu(false); setShowSettings(true); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <SettingsIcon className="w-4 h-4 mr-2" />
+                      Cài đặt
+                    </button>
+                    <div className="border-t my-1"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -335,12 +434,20 @@ const CourierDashboard: React.FC = () => {
                     <span className="text-gray-600">{order.weight}</span>
                   </div>
 
-                  <button
-                    onClick={() => handleAcceptOrder(order.id)}
-                    className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    Nhận đơn hàng
-                  </button>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleViewOrderDetail(order)}
+                      className="flex-1 px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+                    >
+                      Chi tiết
+                    </button>
+                    <button
+                      onClick={() => handleAcceptOrder(order)}
+                      className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      Nhận đơn
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -374,6 +481,101 @@ const CourierDashboard: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Order Detail Modal */}
+      {showOrderDetailModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-lg w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Chi tiết đơn hàng {selectedOrder.id}</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Điểm lấy hàng:</p>
+                <p className="font-medium">{selectedOrder.pickup.address}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Điểm giao hàng:</p>
+                <p className="font-medium">{selectedOrder.delivery.address}</p>
+              </div>
+              {selectedOrder.delivery.customer && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Khách hàng:</p>
+                  <p className="font-medium">{selectedOrder.delivery.customer}</p>
+                  {selectedOrder.delivery.phone && (
+                    <p className="text-sm text-gray-500">{selectedOrder.delivery.phone}</p>
+                  )}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Khoảng cách:</p>
+                  <p className="font-bold">{selectedOrder.distance}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Phí giao:</p>
+                  <p className="font-bold text-blue-600">{selectedOrder.price} VND</p>
+                </div>
+              </div>
+              {selectedOrder.weight && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Khối lượng:</p>
+                  <p className="font-medium">{selectedOrder.weight}</p>
+                </div>
+              )}
+            </div>
+            <button 
+              onClick={() => setShowOrderDetailModal(false)} 
+              className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Cài đặt</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Nhận đơn tự động</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Thông báo âm thanh</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Chế độ tiết kiệm pin</span>
+                  <input type="checkbox" className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Bán kính nhận đơn (km)</label>
+                <input type="number" defaultValue="5" className="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Loại phương tiện</label>
+                <select className="w-full border rounded px-3 py-2">
+                  <option>Xe máy</option>
+                  <option>Xe ô tô</option>
+                  <option>Xe tải nhỏ</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Đóng</button>
+              <button onClick={() => { alert('Đã lưu cài đặt!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

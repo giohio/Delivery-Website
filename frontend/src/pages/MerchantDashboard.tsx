@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Package, DollarSign, Truck, Star, Users, TrendingUp, Plus, Upload, BarChart3, Download, Search, Eye, Edit, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Package, DollarSign, Truck, Star, Users, TrendingUp, Plus, Upload, BarChart3, Download, Search, Eye, Edit, Trash2, LogOut, User } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Order {
   id: string;
@@ -19,6 +21,28 @@ const MerchantDashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [timeFilter, setTimeFilter] = useState('today');
+  const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const notifications = [
+    { id: 1, title: 'Đơn hàng mới', message: 'Bạn có 3 đơn hàng mới cần xử lý', time: '5 phút trước', unread: true },
+    { id: 2, title: 'Giao hàng thành công', message: 'Đơn #FD2024001234 đã được giao', time: '1 giờ trước', unread: true },
+    { id: 3, title: 'Cập nhật hệ thống', message: 'Phiên bản mới đã có sẵn', time: '2 giờ trước', unread: false },
+  ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   // Mock data
   const stats = {
@@ -87,32 +111,43 @@ const MerchantDashboard: React.FC = () => {
   };
 
   const handleCreateOrder = () => {
-    alert('Mở form tạo đơn hàng mới');
+    setShowCreateOrderModal(true);
   };
 
   const handleBulkUpload = () => {
-    alert('Mở form upload hàng loạt');
+    setShowBulkUploadModal(true);
   };
 
   const handleViewReport = () => {
-    alert('Xem báo cáo chi tiết');
+    // Generate a simple report
+    const reportData = `Báo cáo kinh doanh\n\nTổng đơn: ${stats.totalOrders}\nHoàn thành: ${stats.completed}\nDoanh thu: ${stats.revenue}\nPhí vận chuyển: ${stats.shippingFees}`;
+    alert(reportData);
   };
 
   const handleExportData = () => {
-    alert('Xuất dữ liệu');
+    // Export to CSV
+    const csvContent = 'data:text/csv;charset=utf-8,' + 
+      'Đơn hàng,Ngày,Khách hàng,Sản phẩm,Giá trị,Trạng thái\n' +
+      orders.map(o => `${o.id},${o.date},${o.customer.name},${o.products},${o.total},${o.status}`).join('\n');
+    const link = document.createElement('a');
+    link.setAttribute('href', encodeURI(csvContent));
+    link.setAttribute('download', 'orders_export.csv');
+    link.click();
   };
 
-  const handleViewOrder = (orderId: string) => {
-    alert(`Xem chi tiết đơn hàng ${orderId}`);
+  const handleViewOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setShowOrderDetailModal(true);
   };
 
-  const handleEditOrder = (orderId: string) => {
-    alert(`Chỉnh sửa đơn hàng ${orderId}`);
+  const handleEditOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setShowEditModal(true);
   };
 
   const handleDeleteOrder = (orderId: string) => {
     if (confirm(`Bạn có chắc muốn xóa đơn hàng ${orderId}?`)) {
-      alert(`Đã xóa đơn hàng ${orderId}`);
+      alert(`Đã xóa đơn hàng ${orderId}. Trong ứng dụng thực tế sẽ gọi API để xóa.`);
     }
   };
 
@@ -131,23 +166,92 @@ const MerchantDashboard: React.FC = () => {
             
             <div className="flex items-center gap-4">
               {/* Notifications */}
-              <button className="p-2 hover:bg-gray-100 rounded-full relative">
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 hover:bg-gray-100 rounded-full relative"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {notifications.filter(n => n.unread).length > 0 && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  )}
+                </button>
+                
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                    <div className="p-4 border-b">
+                      <h3 className="font-semibold">Thông báo</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.map(notif => (
+                        <div key={notif.id} className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${notif.unread ? 'bg-blue-50' : ''}`}>
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="font-medium text-sm">{notif.title}</p>
+                            {notif.unread && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
+                          </div>
+                          <p className="text-sm text-gray-600">{notif.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-3 text-center border-t">
+                      <button className="text-sm text-blue-600 hover:text-blue-800">Xem tất cả</button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Settings */}
-              <button className="p-2 hover:bg-gray-100 rounded-full">
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </button>
 
-              {/* Avatar */}
-              <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                SK
+              {/* Avatar with dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-medium hover:bg-purple-700 transition-colors"
+                >
+                  {user?.fullName?.charAt(0).toUpperCase() || 'SK'}
+                </button>
+                
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
+                    <div className="px-4 py-2 border-b">
+                      <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'Merchant'}</p>
+                      <p className="text-xs text-gray-500">{user?.email || 'merchant@example.com'}</p>
+                    </div>
+                    <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                      <User className="w-4 h-4 mr-2" />
+                      Hồ sơ cá nhân
+                    </button>
+                    <button 
+                      onClick={() => { setShowUserMenu(false); setShowSettings(true); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      </svg>
+                      Cài đặt
+                    </button>
+                    <div className="border-t my-1"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Đăng xuất
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -363,14 +467,14 @@ const MerchantDashboard: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleViewOrder(order.id)}
+                          onClick={() => handleViewOrder(order)}
                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Xem chi tiết"
                         >
                           <Eye className="w-4 h-4 text-gray-600" />
                         </button>
                         <button
-                          onClick={() => handleEditOrder(order.id)}
+                          onClick={() => handleEditOrder(order)}
                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Chỉnh sửa"
                         >
@@ -392,6 +496,161 @@ const MerchantDashboard: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Create Order Modal */}
+      {showCreateOrderModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Tạo đơn hàng mới</h3>
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Tạo đơn thành công!'); setShowCreateOrderModal(false); }}>
+              <div>
+                <label className="block text-sm font-medium mb-1">Tên khách hàng</label>
+                <input type="text" required className="w-full border rounded px-3 py-2" placeholder="Nhập tên khách hàng" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">SĐT khách hàng</label>
+                <input type="tel" required className="w-full border rounded px-3 py-2" placeholder="Nhập số điện thoại" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Địa chỉ giao hàng</label>
+                <input type="text" required className="w-full border rounded px-3 py-2" placeholder="Nhập địa chỉ" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Sản phẩm</label>
+                <textarea required className="w-full border rounded px-3 py-2" rows={3} placeholder="Mô tả sản phẩm"></textarea>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Giá trị đơn hàng (VND)</label>
+                <input type="number" required className="w-full border rounded px-3 py-2" placeholder="Nhập giá trị" />
+              </div>
+              <div className="flex space-x-3">
+                <button type="button" onClick={() => setShowCreateOrderModal(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Hủy</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Tạo đơn</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Upload Modal */}
+      {showBulkUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Upload hàng loạt</h3>
+            <div className="space-y-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p className="text-sm text-gray-600 mb-2">Kéo thả file CSV hoặc click để chọn</p>
+                <input type="file" accept=".csv,.xlsx" className="hidden" id="bulk-upload" />
+                <label htmlFor="bulk-upload" className="inline-block px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700">
+                  Chọn file
+                </label>
+              </div>
+              <div className="text-sm text-gray-600">
+                <p className="font-medium mb-2">Hướng dẫn:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>File phải định dạng CSV hoặc Excel</li>
+                  <li>Cột: Tên, SĐT, Địa chỉ, Sản phẩm, Giá</li>
+                </ul>
+              </div>
+              <button onClick={() => setShowBulkUploadModal(false)} className="w-full px-4 py-2 border rounded hover:bg-gray-50">Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Order Detail Modal */}
+      {showOrderDetailModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-lg w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Chi tiết đơn hàng {selectedOrder.id}</h3>
+            <div className="space-y-3">
+              <div><strong>Ngày:</strong> {selectedOrder.date}</div>
+              <div><strong>Khách hàng:</strong> {selectedOrder.customer.name} - {selectedOrder.customer.phone}</div>
+              <div><strong>Sản phẩm:</strong> {selectedOrder.products}</div>
+              <div><strong>Giá trị:</strong> {selectedOrder.total}</div>
+              <div><strong>Phí giao hàng:</strong> {selectedOrder.shippingFee}</div>
+              <div><strong>Tài xế:</strong> {selectedOrder.driver}</div>
+              <div><strong>Trạng thái:</strong> {getStatusBadge(selectedOrder.status)}</div>
+            </div>
+            <button onClick={() => setShowOrderDetailModal(false)} className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Đóng</button>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Order Modal */}
+      {showEditModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Chỉnh sửa đơn hàng {selectedOrder.id}</h3>
+            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Cập nhật thành công!'); setShowEditModal(false); }}>
+              <div>
+                <label className="block text-sm font-medium mb-1">Tên khách hàng</label>
+                <input type="text" defaultValue={selectedOrder.customer.name} className="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">SĐT</label>
+                <input type="tel" defaultValue={selectedOrder.customer.phone} className="w-full border rounded px-3 py-2" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Sản phẩm</label>
+                <textarea defaultValue={selectedOrder.products} className="w-full border rounded px-3 py-2" rows={3}></textarea>
+              </div>
+              <div className="flex space-x-3">
+                <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Hủy</button>
+                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Cài đặt</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Thông báo Email</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Thông báo Push</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center justify-between py-2">
+                  <span className="text-sm font-medium">Hiển thị đơn hàng mới tự động</span>
+                  <input type="checkbox" defaultChecked className="w-4 h-4" />
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Ngôn ngữ</label>
+                <select className="w-full border rounded px-3 py-2">
+                  <option>Tiếng Việt</option>
+                  <option>English</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Múi giờ</label>
+                <select className="w-full border rounded px-3 py-2">
+                  <option>GMT+7 (Việt Nam)</option>
+                  <option>GMT+8 (Singapore)</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Đóng</button>
+              <button onClick={() => { alert('Đã lưu cài đặt!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
