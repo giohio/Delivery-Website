@@ -36,9 +36,9 @@ const CourierDashboard: React.FC = () => {
   const { user, logout } = useAuth();
 
   const notifications = [
-    { id: 1, title: 'Đơn hàng mới', message: 'Có 2 đơn hàng khả dụng gần bạn', time: '3 phút trước', unread: true },
-    { id: 2, title: 'Đã nhận tiền', message: 'Bạn vừa nhận 18,000 VND từ đơn #FD001235', time: '15 phút trước', unread: true },
-    { id: 3, title: 'Đánh giá 5 sao', message: 'Khách hàng vừa đánh giá 5 sao cho bạn', time: '1 giờ trước', unread: false },
+    { id: 1, title: 'New orders', message: '2 available orders near you', time: '3 minutes ago', unread: true },
+    { id: 2, title: 'Payment received', message: 'You received 18,000 VND from order #FD001235', time: '15 minutes ago', unread: true },
+    { id: 3, title: '5-star rating', message: 'Customer gave you 5 stars', time: '1 hour ago', unread: false },
   ];
 
   const handleLogout = () => {
@@ -121,15 +121,15 @@ const CourierDashboard: React.FC = () => {
   };
 
   const handleCompleteDelivery = () => {
-    if (confirm('Xác nhận đã hoàn thành giao hàng?')) {
-      alert('Đơn hàng đã được đánh dấu hoàn thành!');
-      // In real app: call API to update delivery status
+    if (confirm('Delivered to customer?')) {
+      alert('Delivery completed! Payment will be added to your account.');
+      // In real app: call API to mark delivery as complete
     }
   };
 
   const handleAcceptOrder = (order: Order) => {
-    if (confirm(`Bạn có muốn nhận đơn hàng ${order.id}?`)) {
-      alert(`Đã nhận đơn hàng ${order.id}. Hãy đến địa chỉ lấy hàng!`);
+    if (confirm(`Accept order ${order.id}?`)) {
+      alert(`Accepted order ${order.id}. Please go to pickup address!`);
       // In real app: call API to accept order
     }
   };
@@ -148,14 +148,14 @@ const CourierDashboard: React.FC = () => {
             <div className="flex items-center gap-4">
               <h1 className="text-2xl font-bold text-blue-600">FastDelivery</h1>
               <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm font-medium border border-blue-200">
-                Tài xế
+                Driver
               </span>
             </div>
             
             <div className="flex items-center gap-4">
               {/* Online Toggle */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Trạng thái:</span>
+                <span className="text-sm text-gray-600">Status:</span>
                 <button
                   onClick={() => setIsOnline(!isOnline)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
@@ -169,7 +169,7 @@ const CourierDashboard: React.FC = () => {
                   />
                 </button>
                 <span className={`text-sm font-medium ${isOnline ? 'text-blue-600' : 'text-gray-500'}`}>
-                  {isOnline ? 'Trực tuyến' : 'Ngoại tuyến'}
+                  {isOnline ? 'Online' : 'Offline'}
                 </span>
               </div>
 
@@ -190,7 +190,7 @@ const CourierDashboard: React.FC = () => {
                 {showNotifications && (
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
                     <div className="p-4 border-b">
-                      <h3 className="font-semibold">Thông báo</h3>
+                      <h3 className="font-semibold">Notifications</h3>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       {notifications.map(notif => (
@@ -205,7 +205,7 @@ const CourierDashboard: React.FC = () => {
                       ))}
                     </div>
                     <div className="p-3 text-center border-t">
-                      <button className="text-sm text-blue-600 hover:text-blue-800">Xem tất cả</button>
+                      <button className="text-sm text-blue-600 hover:text-blue-800">View all</button>
                     </div>
                   </div>
                 )}
@@ -234,19 +234,19 @@ const CourierDashboard: React.FC = () => {
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
                     <div className="px-4 py-2 border-b">
-                      <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'Tài xế'}</p>
+                      <p className="text-sm font-semibold text-gray-900">{user?.fullName || 'Driver'}</p>
                       <p className="text-xs text-gray-500">{user?.email || 'courier@example.com'}</p>
                     </div>
                     <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                       <User className="w-4 h-4 mr-2" />
-                      Hồ sơ cá nhân
+                      Profile
                     </button>
                     <button 
                       onClick={() => { setShowUserMenu(false); setShowSettings(true); }}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     >
                       <SettingsIcon className="w-4 h-4 mr-2" />
-                      Cài đặt
+                      Settings
                     </button>
                     <div className="border-t my-1"></div>
                     <button
@@ -254,7 +254,7 @@ const CourierDashboard: React.FC = () => {
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
-                      Đăng xuất
+                      Logout
                     </button>
                   </div>
                 )}
@@ -268,8 +268,8 @@ const CourierDashboard: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Greeting */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Chào Soul Knight!</h2>
-          <p className="text-gray-600">Hôm nay là ngày làm việc tốt lành. Chúc bạn giao hàng an toàn!</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Hello {user?.fullName || 'Driver'}! 👋</h2>
+          <p className="text-gray-600">Have a great delivery day. Stay safe on the road!</p>
         </div>
 
         {/* Stats Cards */}
@@ -280,7 +280,7 @@ const CourierDashboard: React.FC = () => {
                 <Package className="w-6 h-6 text-blue-600" />
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Đơn hàng hôm nay</p>
+            <p className="text-sm text-gray-600 mb-1">Today's Orders</p>
             <p className="text-3xl font-bold text-gray-900">{stats.todayOrders}</p>
           </div>
 
@@ -290,7 +290,7 @@ const CourierDashboard: React.FC = () => {
                 <DollarSign className="w-6 h-6 text-green-600" />
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Thu nhập</p>
+            <p className="text-sm text-gray-600 mb-1">Earnings</p>
             <p className="text-3xl font-bold text-gray-900">{stats.todayEarnings}</p>
           </div>
 
@@ -300,7 +300,7 @@ const CourierDashboard: React.FC = () => {
                 <Navigation className="w-6 h-6 text-purple-600" />
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Quãng đường</p>
+            <p className="text-sm text-gray-600 mb-1">Distance</p>
             <p className="text-3xl font-bold text-gray-900">{stats.totalDistance}km</p>
           </div>
 
@@ -310,7 +310,7 @@ const CourierDashboard: React.FC = () => {
                 <Star className="w-6 h-6 text-yellow-600" />
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Đánh giá TB</p>
+            <p className="text-sm text-gray-600 mb-1">Avg Rating</p>
             <p className="text-3xl font-bold text-gray-900">{stats.averageRating}</p>
           </div>
 
@@ -320,7 +320,7 @@ const CourierDashboard: React.FC = () => {
                 <Clock className="w-6 h-6 text-indigo-600" />
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">Thời gian online</p>
+            <p className="text-sm text-gray-600 mb-1">Online Time</p>
             <p className="text-3xl font-bold text-gray-900">{stats.onlineTime}</p>
           </div>
         </div>
@@ -329,27 +329,27 @@ const CourierDashboard: React.FC = () => {
         {currentOrder && (
           <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-l-4 border-blue-600">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Đơn hàng hiện tại</h3>
+              <h3 className="text-xl font-bold text-gray-900">Current Delivery</h3>
               <div className="flex items-center gap-2">
                 <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-                  Đã lấy hàng
+                  Picked Up
                 </span>
                 <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                  Bình thường
+                  Standard
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <p className="text-sm text-gray-600 mb-2">Lấy hàng tại:</p>
+                <p className="text-sm text-gray-600 mb-2">Pickup at:</p>
                 <div className="flex items-start gap-2">
                   <MapPin className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <p className="font-medium text-gray-900">{currentOrder.pickup.address}</p>
                 </div>
 
                 <div className="mt-4">
-                  <p className="text-sm text-gray-600 mb-2">Giao đến:</p>
+                  <p className="text-sm text-gray-600 mb-2">Deliver to:</p>
                   <div className="flex items-start gap-2">
                     <MapPin className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <p className="font-medium text-gray-900">{currentOrder.delivery.address}</p>
@@ -359,7 +359,7 @@ const CourierDashboard: React.FC = () => {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Khách hàng:</span>
+                  <span className="text-sm text-gray-600">Customer:</span>
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-900">{currentOrder.delivery.customer}</span>
                     <button className="p-1 hover:bg-gray-100 rounded-full">
@@ -370,11 +370,11 @@ const CourierDashboard: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Khoảng cách</p>
+                    <p className="text-sm text-gray-600 mb-1">Distance</p>
                     <p className="font-bold text-gray-900">{currentOrder.distance}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Thời gian dự kiến</p>
+                    <p className="text-sm text-gray-600 mb-1">Estimated Time</p>
                     <p className="font-bold text-gray-900">{currentOrder.estimatedTime}</p>
                   </div>
                 </div>
@@ -392,14 +392,14 @@ const CourierDashboard: React.FC = () => {
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
               >
                 <Navigation className="w-5 h-5" />
-                Điều hướng
+                Navigate
               </button>
               <button
                 onClick={handleCompleteDelivery}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-white border-2 border-blue-600 text-blue-600 rounded-xl hover:bg-blue-50 transition-colors font-medium"
               >
                 <CheckCircle className="w-5 h-5" />
-                Hoàn thành giao hàng
+                Complete Delivery
               </button>
             </div>
           </div>
@@ -408,7 +408,7 @@ const CourierDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Available Orders */}
           <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Đơn hàng khả dụng</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Available Orders</h3>
             <div className="space-y-4">
               {availableOrders.map((order) => (
                 <div key={order.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:border-blue-300 transition-colors">
@@ -439,13 +439,13 @@ const CourierDashboard: React.FC = () => {
                       onClick={() => handleViewOrderDetail(order)}
                       className="flex-1 px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium"
                     >
-                      Chi tiết
+                      Details
                     </button>
                     <button
                       onClick={() => handleAcceptOrder(order)}
                       className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                     >
-                      Nhận đơn
+                      Accept Order
                     </button>
                   </div>
                 </div>
@@ -455,7 +455,7 @@ const CourierDashboard: React.FC = () => {
 
           {/* Completed Today */}
           <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Đã hoàn thành hôm nay</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Completed Today</h3>
             <div className="space-y-4">
               {completedOrders.map((order) => (
                 <div key={order.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -471,7 +471,7 @@ const CourierDashboard: React.FC = () => {
                   </div>
                   
                   <div className="mb-3">
-                    <p className="text-sm text-gray-600">Hoàn thành lúc: {order.completedTime}</p>
+                    <p className="text-sm text-gray-600">Completed at: {order.completedTime}</p>
                     <p className="text-sm font-medium text-gray-900">{order.pickup.address}</p>
                     <p className="text-sm text-gray-600">{order.delivery.address}</p>
                   </div>
@@ -486,19 +486,19 @@ const CourierDashboard: React.FC = () => {
       {showOrderDetailModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Chi tiết đơn hàng {selectedOrder.id}</h3>
+            <h3 className="text-xl font-bold mb-4">Order Details {selectedOrder.id}</h3>
             <div className="space-y-3">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Điểm lấy hàng:</p>
+                <p className="text-sm text-gray-600 mb-1">Pickup Location:</p>
                 <p className="font-medium">{selectedOrder.pickup.address}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Điểm giao hàng:</p>
+                <p className="text-sm text-gray-600 mb-1">Delivery Location:</p>
                 <p className="font-medium">{selectedOrder.delivery.address}</p>
               </div>
               {selectedOrder.delivery.customer && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Khách hàng:</p>
+                  <p className="text-sm text-gray-600 mb-1">Customer:</p>
                   <p className="font-medium">{selectedOrder.delivery.customer}</p>
                   {selectedOrder.delivery.phone && (
                     <p className="text-sm text-gray-500">{selectedOrder.delivery.phone}</p>
@@ -507,17 +507,17 @@ const CourierDashboard: React.FC = () => {
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Khoảng cách:</p>
+                  <p className="text-sm text-gray-600 mb-1">Distance:</p>
                   <p className="font-bold">{selectedOrder.distance}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Phí giao:</p>
+                  <p className="text-sm text-gray-600 mb-1">Delivery Fee:</p>
                   <p className="font-bold text-blue-600">{selectedOrder.price} VND</p>
                 </div>
               </div>
               {selectedOrder.weight && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Khối lượng:</p>
+                  <p className="text-sm text-gray-600 mb-1">Weight:</p>
                   <p className="font-medium">{selectedOrder.weight}</p>
                 </div>
               )}
@@ -526,7 +526,7 @@ const CourierDashboard: React.FC = () => {
               onClick={() => setShowOrderDetailModal(false)} 
               className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              Đóng
+              Close
             </button>
           </div>
         </div>
@@ -536,42 +536,42 @@ const CourierDashboard: React.FC = () => {
       {showSettings && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Cài đặt</h3>
+            <h3 className="text-xl font-bold mb-4">Settings</h3>
             <div className="space-y-4">
               <div>
                 <label className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium">Nhận đơn tự động</span>
+                  <span className="text-sm font-medium">Auto Accept Orders</span>
                   <input type="checkbox" defaultChecked className="w-4 h-4" />
                 </label>
               </div>
               <div>
                 <label className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium">Thông báo âm thanh</span>
+                  <span className="text-sm font-medium">Sound Notifications</span>
                   <input type="checkbox" defaultChecked className="w-4 h-4" />
                 </label>
               </div>
               <div>
                 <label className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium">Chế độ tiết kiệm pin</span>
+                  <span className="text-sm font-medium">Battery Saver Mode</span>
                   <input type="checkbox" className="w-4 h-4" />
                 </label>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Bán kính nhận đơn (km)</label>
+                <label className="block text-sm font-medium mb-2">Accept Radius (km)</label>
                 <input type="number" defaultValue="5" className="w-full border rounded px-3 py-2" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Loại phương tiện</label>
+                <label className="block text-sm font-medium mb-2">Vehicle Type</label>
                 <select className="w-full border rounded px-3 py-2">
-                  <option>Xe máy</option>
-                  <option>Xe ô tô</option>
-                  <option>Xe tải nhỏ</option>
+                  <option>Motorcycle</option>
+                  <option>Car</option>
+                  <option>Small Truck</option>
                 </select>
               </div>
             </div>
             <div className="flex space-x-3 mt-6">
-              <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Đóng</button>
-              <button onClick={() => { alert('Đã lưu cài đặt!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+              <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Close</button>
+              <button onClick={() => { alert('Settings saved!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
             </div>
           </div>
         </div>

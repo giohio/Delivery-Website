@@ -2,11 +2,12 @@ import { MemberProvider } from '../../intergration';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { ScrollToTop } from '@/lib/scroll-to-top';
 import ErrorPage from '../../intergration/errorHandlers/ErrorPage';
-// import HomePage from '@/components/pages/HomePage';
+import HomePage from './HomePage';
 import CustomerDashboard from '@/components/pages/CustomerDashboard';
 import CourierDashboard from '@/components/pages/CourierDashboard';
 import MerchantDashboard from '@/components/pages/MerchantDashboard';
 import AdminDashboard from '@/components/pages/AdminDashboard';
+import ShipperDashboard from '../pages/ShipperDashboardModern';
 
 import { MemberProtectedRoute } from '@/components/ui/member-protected-route';
 
@@ -29,20 +30,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: (
-          <div style={{ minHeight: '100vh', padding: '2rem', backgroundColor: '#f3f4f6' }}>
-            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>FastDelivery</h1>
-            <p style={{ marginBottom: '1rem' }}>Welcome to FastDelivery!</p>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <a href="/customer" style={{ padding: '0.5rem 1rem', backgroundColor: '#3b82f6', color: 'white', borderRadius: '0.5rem', textDecoration: 'none' }}>
-                Customer Dashboard
-              </a>
-              <a href="/admin" style={{ padding: '0.5rem 1rem', backgroundColor: '#ef4444', color: 'white', borderRadius: '0.5rem', textDecoration: 'none' }}>
-                Admin Dashboard
-              </a>
-            </div>
-          </div>
-        ),
+        element: <HomePage />,
       },
 
       {
@@ -60,6 +48,14 @@ const router = createBrowserRouter([
             <CourierDashboard />
           </MemberProtectedRoute>
         ),
+      },
+      {
+        path: "shipper",
+        element: <ShipperDashboard />,
+      },
+      {
+        path: "dashboard/shipper",
+        element: <ShipperDashboard />,
       },
       {
         path: "dashboard/merchant",

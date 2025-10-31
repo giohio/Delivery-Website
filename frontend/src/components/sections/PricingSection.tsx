@@ -3,68 +3,68 @@ import { Clock, Check, Star, Gift, Zap, Crown, Award } from 'lucide-react';
 const services = [
   { 
     name: 'Standard', 
-    time: '2-4 giờ', 
+    time: '2-4 hours', 
     price: '15,000', 
     originalPrice: '18,000',
     color: 'from-blue-500 to-blue-600',
     icon: Clock,
-    description: 'Giao hàng cơ bản với theo dõi GPS',
+    description: 'Basic delivery with GPS tracking',
     features: [
-      'Theo dõi GPS thời gian thực',
-      'Bảo hiểm hàng hóa cơ bản',
-      'Hỗ trợ khách hàng 24/7',
-      'Thu hộ COD miễn phí',
-      'Giao hàng trong giờ hành chính'
+      'Real-time GPS tracking',
+      'Basic goods insurance',
+      '24/7 customer support',
+      'Free COD collection',
+      'Delivery during business hours'
     ],
     popular: false
   },
   { 
     name: 'Fast', 
-    time: '1-2 giờ', 
+    time: '1-2 hours', 
     price: '25,000', 
     originalPrice: '30,000',
     color: 'from-orange-500 to-orange-600',
     icon: Zap,
-    description: 'Dịch vụ ưu tiên với bảo hiểm toàn diện',
+    description: 'Priority service with comprehensive insurance',
     features: [
-      'Tất cả tính năng Standard',
-      'Bảo hiểm toàn diện đến 5 triệu',
-      'Ưu tiên phân công tài xế',
-      'Giao hàng ngoài giờ (phụ phí)',
-      'Hỗ trợ đặc biệt qua hotline'
+      'All Standard features',
+      'Comprehensive insurance up to 5 million',
+      'Priority driver assignment',
+      'After-hours delivery (extra fee)',
+      'Special hotline support'
     ],
     popular: true
   },
   { 
     name: 'Express', 
-    time: '30-60 phút', 
+    time: '30-60 min', 
     price: '35,000', 
     originalPrice: '45,000',
     color: 'from-purple-500 to-purple-600',
     icon: Crown,
-    description: 'Dịch vụ VIP cao cấp với hỗ trợ đặc biệt',
+    description: 'Premium VIP service with special support',
     features: [
-      'Tất cả tính năng Fast',
-      'Bảo hiểm VIP đến 10 triệu',
-      'Tài xế chuyên nghiệp',
-      'Giao hàng 24/7 không phụ phí',
-      'Quản lý tài khoản riêng'
+      'All Fast features',
+      'VIP insurance up to 10 million',
+      'Professional driver',
+      '24/7 delivery no extra fee',
+      'Dedicated account manager'
     ],
     popular: false
   }
 ];
 
 const additionalServices = [
-  { name: 'Giao hàng cuối tuần', price: '+5,000 VND' },
-  { name: 'Giao hàng ban đêm (22h-6h)', price: '+8,000 VND' },
-  { name: 'Hàng dễ vỡ/đặc biệt', price: '+10,000 VND' },
-  { name: 'Thu hộ COD trên 5 triệu', price: '0.5% giá trị đơn hàng' }
+  { name: 'Weekend delivery', price: '+5,000 VND' },
+  { name: 'Night delivery (10pm-6am)', price: '+8,000 VND' },
+  { name: 'Fragile/special items', price: '+10,000 VND' },
+  { name: 'COD over 5 million', price: '0.5% order value' }
 ];
 
 const loyaltyProgram = [
-  { milestone: '10 đơn hàng', discount: '5%', icon: Gift },
-  { milestone: '50 đơn hàng', discount: '10%', icon: Star },
-  { milestone: '100 đơn hàng', discount: '15%', icon: Award }
+  { milestone: '10 orders', discount: '5%', icon: Gift },
+  { milestone: '50 orders', discount: '10%', icon: Star },
+  { milestone: '100 orders', discount: '15%', icon: Award }
 ];
 
 export function PricingSection() {
@@ -74,10 +74,10 @@ export function PricingSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            💰 <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Bảng giá dịch vụ</span>
+            💰 <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Service Pricing</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Chọn gói dịch vụ phù hợp với nhu cầu của bạn - Giá cả minh bạch, không phí ẩn
+            Choose the service package that fits your needs - Transparent pricing, no hidden fees
           </p>
         </div>
 
@@ -92,8 +92,8 @@ export function PricingSection() {
             >
               {service.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                    Phổ biến nhất
+                  <div className="mt-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                    Most Popular
                   </div>
                 </div>
               )}
@@ -116,7 +116,7 @@ export function PricingSection() {
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-sm text-gray-400 line-through">{service.originalPrice} VND</span>
-                    <span className="text-sm text-green-600 font-semibold">Tiết kiệm {Math.round(((parseInt(service.originalPrice) - parseInt(service.price)) / parseInt(service.originalPrice)) * 100)}%</span>
+                    <span className="text-sm text-green-600 font-semibold">Save {Math.round(((parseInt(service.originalPrice) - parseInt(service.price)) / parseInt(service.originalPrice)) * 100)}%</span>
                   </div>
                 </div>
                 
@@ -134,7 +134,7 @@ export function PricingSection() {
                     ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-lg transform hover:scale-105' 
                     : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:shadow-lg transform hover:scale-105'
                 }`}>
-                  Chọn gói {service.name}
+                  Choose {service.name}
                 </button>
               </div>
             </div>
@@ -143,7 +143,7 @@ export function PricingSection() {
 
         {/* Additional Services */}
         <div className="bg-white rounded-3xl p-8 shadow-lg mb-16">
-          <h3 className="text-3xl font-bold text-center mb-8 text-gray-900">📦 Dịch vụ bổ sung</h3>
+          <h3 className="text-3xl font-bold text-center mb-8 text-gray-900">📦 Additional Services</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {additionalServices.map((service, idx) => (
               <div key={idx} className="text-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 hover:shadow-md transition-all">
@@ -156,8 +156,8 @@ export function PricingSection() {
 
         {/* Loyalty Program */}
         <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-8 text-white">
-          <h3 className="text-3xl font-bold text-center mb-8">🎆 Chương trình khách hàng thân thiết</h3>
-          <p className="text-center text-purple-100 mb-8 text-lg">Càng sử dụng nhiều, càng tiết kiệm nhiều!</p>
+          <h3 className="text-3xl font-bold text-center mb-8">🎆 Loyalty Program</h3>
+          <p className="text-center text-purple-100 mb-8 text-lg">Use more, save more!</p>
           
           <div className="grid md:grid-cols-3 gap-6">
             {loyaltyProgram.map((level, idx) => (
@@ -166,8 +166,8 @@ export function PricingSection() {
                   <level.icon className="w-8 h-8" />
                 </div>
                 <h4 className="text-xl font-bold mb-2">{level.milestone}</h4>
-                <p className="text-3xl font-bold text-yellow-300 mb-2">Giảm {level.discount}</p>
-                <p className="text-purple-100 text-sm">cho tất cả đơn hàng tiếp theo</p>
+                <p className="text-3xl font-bold text-yellow-300 mb-2">{level.discount} OFF</p>
+                <p className="text-purple-100 text-sm">on all future orders</p>
               </div>
             ))}
           </div>

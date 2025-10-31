@@ -265,7 +265,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-light-grey">Đang tải dữ liệu...</p>
+          <p className="text-light-grey">Loading data...</p>
         </div>
       </div>
     );
@@ -308,7 +308,7 @@ export default function AdminDashboard() {
                 {showNotifications && (
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
                     <div className="p-4 border-b">
-                      <h3 className="font-semibold">Thông báo</h3>
+                      <h3 className="font-semibold">Notifications</h3>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       {notifications.map(notif => (
@@ -323,7 +323,7 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                     <div className="p-3 text-center border-t">
-                      <button className="text-sm text-blue-600 hover:text-blue-800">Xem tất cả</button>
+                      <button className="text-sm text-blue-600 hover:text-blue-800">View all</button>
                     </div>
                   </div>
                 )}
@@ -355,14 +355,14 @@ export default function AdminDashboard() {
                     </div>
                     <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
                       <User className="w-4 h-4 mr-2" />
-                      Hồ sơ cá nhân
+                      Profile
                     </button>
                     <button 
                       onClick={() => { setShowUserMenu(false); setShowSettings(true); }}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     >
                       <Settings className="w-4 h-4 mr-2" />
-                      Cài đặt
+                      Settings
                     </button>
                     <div className="border-t my-1"></div>
                     <button
@@ -370,7 +370,7 @@ export default function AdminDashboard() {
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
-                      Đăng xuất
+                      Logout
                     </button>
                   </div>
                 )}
@@ -389,10 +389,10 @@ export default function AdminDashboard() {
           className="mb-8"
         >
           <h2 className="text-3xl font-heading font-bold text-foreground mb-2">
-            Bảng điều khiển quản trị
+            Admin Dashboard
           </h2>
           <p className="text-light-grey">
-            Giám sát và quản lý toàn bộ hệ thống FastDelivery
+            Monitor and manage the entire FastDelivery system
           </p>
         </motion.div>
 
@@ -409,7 +409,7 @@ export default function AdminDashboard() {
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-light-grey">Tổng người dùng</p>
+                <p className="text-sm text-light-grey">Total Users</p>
                 <p className="text-2xl font-bold text-foreground">{systemStats.totalUsers.toLocaleString()}</p>
               </div>
             </div>
@@ -421,7 +421,7 @@ export default function AdminDashboard() {
                 <Package className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-light-grey">Tổng đơn hàng</p>
+                <p className="text-sm text-light-grey">Total Orders</p>
                 <p className="text-2xl font-bold text-foreground">{systemStats.totalOrders.toLocaleString()}</p>
               </div>
             </div>
@@ -433,7 +433,7 @@ export default function AdminDashboard() {
                 <DollarSign className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-light-grey">Doanh thu</p>
+                <p className="text-sm text-light-grey">Revenue</p>
                 <p className="text-2xl font-bold text-foreground">{(systemStats.totalRevenue / 1000000).toFixed(0)}M</p>
               </div>
             </div>
@@ -445,7 +445,7 @@ export default function AdminDashboard() {
                 <Zap className="w-6 h-6 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm text-light-grey">Uptime hệ thống</p>
+                <p className="text-sm text-light-grey">System Uptime</p>
                 <p className="text-2xl font-bold text-foreground">{systemStats.systemUptime}%</p>
               </div>
             </div>
@@ -465,7 +465,7 @@ export default function AdminDashboard() {
                 <Truck className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-light-grey">Tài xế hoạt động</p>
+                <p className="text-sm text-light-grey">Active Drivers</p>
                 <p className="text-2xl font-bold text-foreground">{systemStats.activeDrivers}</p>
               </div>
             </div>
@@ -477,7 +477,7 @@ export default function AdminDashboard() {
                 <Store className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-light-grey">Merchant hoạt động</p>
+                <p className="text-sm text-light-grey">Active Merchants</p>
                 <p className="text-2xl font-bold text-foreground">{systemStats.activeMerchants}</p>
               </div>
             </div>
@@ -489,7 +489,7 @@ export default function AdminDashboard() {
                 <Clock className="w-6 h-6 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm text-light-grey">Thời gian giao TB</p>
+                <p className="text-sm text-light-grey">Avg Delivery Time</p>
                 <p className="text-2xl font-bold text-foreground">{systemStats.averageDeliveryTime}m</p>
               </div>
             </div>
@@ -501,7 +501,7 @@ export default function AdminDashboard() {
                 <TrendingUp className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-light-grey">Hài lòng KH</p>
+                <p className="text-sm text-light-grey">Customer Satisfaction</p>
                 <p className="text-2xl font-bold text-foreground">{systemStats.customerSatisfaction}/5</p>
               </div>
             </div>
@@ -518,7 +518,7 @@ export default function AdminDashboard() {
           >
             <Card className="p-6">
               <h3 className="text-lg font-heading font-semibold text-foreground mb-4">
-                Hoạt động gần đây
+                Recent Activities
               </h3>
               
               <div className="space-y-4">
@@ -551,26 +551,26 @@ export default function AdminDashboard() {
           >
             <Card className="p-6">
               <h3 className="text-lg font-heading font-semibold text-foreground mb-4">
-                Tổng quan đơn hàng
+                Orders Overview
               </h3>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-green-600">{systemStats.completedOrders.toLocaleString()}</p>
-                  <p className="text-sm text-light-grey">Hoàn thành</p>
+                  <p className="text-sm text-light-grey">Completed</p>
                 </div>
                 
                 <div className="text-center p-4 bg-yellow-50 rounded-lg">
                   <Clock className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-yellow-600">{systemStats.pendingOrders.toLocaleString()}</p>
-                  <p className="text-sm text-light-grey">Đang xử lý</p>
+                  <p className="text-sm text-light-grey">Processing</p>
                 </div>
                 
                 <div className="text-center p-4 bg-red-50 rounded-lg">
                   <AlertTriangle className="w-8 h-8 text-red-600 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-red-600">{systemStats.cancelledOrders.toLocaleString()}</p>
-                  <p className="text-sm text-light-grey">Đã hủy</p>
+                  <p className="text-sm text-light-grey">Cancelled</p>
                 </div>
                 
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -578,7 +578,7 @@ export default function AdminDashboard() {
                   <p className="text-2xl font-bold text-blue-600">
                     {((systemStats.completedOrders / systemStats.totalOrders) * 100).toFixed(1)}%
                   </p>
-                  <p className="text-sm text-light-grey">Tỷ lệ thành công</p>
+                  <p className="text-sm text-light-grey">Success Rate</p>
                 </div>
               </div>
             </Card>
@@ -594,13 +594,13 @@ export default function AdminDashboard() {
           <Card className="p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-heading font-semibold text-foreground">
-                Quản lý người dùng
+                User Management
               </h3>
               <div className="flex space-x-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-light-grey" />
                   <Input
-                    placeholder="Tìm kiếm người dùng..."
+                    placeholder="Search users..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 w-64"
@@ -611,10 +611,10 @@ export default function AdminDashboard() {
                   onChange={(e) => setRoleFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
-                  <option value="all">Tất cả vai trò</option>
-                  <option value="customer">Khách hàng</option>
-                  <option value="driver">Tài xế</option>
-                  <option value="shipper">Tài xế</option>
+                  <option value="all">All Roles</option>
+                  <option value="customer">Customer</option>
+                  <option value="driver">Driver</option>
+                  <option value="shipper">Driver</option>
                   <option value="merchant">Merchant</option>
                   <option value="admin">Admin</option>
                 </select>
@@ -623,14 +623,14 @@ export default function AdminDashboard() {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="active">Hoạt động</option>
-                  <option value="suspended">Tạm khóa</option>
-                  <option value="pending">Chờ duyệt</option>
+                  <option value="all">All Statuses</option>
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="pending">Pending</option>
                 </select>
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
-                  Thêm người dùng
+                  Add User
                 </Button>
               </div>
             </div>
@@ -640,25 +640,25 @@ export default function AdminDashboard() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-light-grey uppercase tracking-wider">
-                      Người dùng
+                      User
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-light-grey uppercase tracking-wider">
-                      Vai trò
+                      Role
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-light-grey uppercase tracking-wider">
-                      Trạng thái
+                      Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-light-grey uppercase tracking-wider">
-                      Ngày tham gia
+                      Joined Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-light-grey uppercase tracking-wider">
-                      Đơn hàng
+                      Orders
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-light-grey uppercase tracking-wider">
-                      Đánh giá
+                      Rating
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-light-grey uppercase tracking-wider">
-                      Thao tác
+                      Actions
                     </th>
                   </tr>
                 </thead>
@@ -731,7 +731,7 @@ export default function AdminDashboard() {
             {filteredUsers.length === 0 && (
               <div className="text-center py-8">
                 <Users className="w-12 h-12 text-light-grey mx-auto mb-4" />
-                <p className="text-light-grey">Không tìm thấy người dùng nào</p>
+                <p className="text-light-grey">No users found</p>
               </div>
             )}
           </Card>
@@ -742,32 +742,32 @@ export default function AdminDashboard() {
       {showSettings && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Cài đặt hệ thống</h3>
+            <h3 className="text-xl font-bold mb-4">System Settings</h3>
             <div className="space-y-4">
               <div>
                 <label className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium">Bảo trì tự động</span>
+                  <span className="text-sm font-medium">Auto Maintenance</span>
                   <input type="checkbox" defaultChecked className="w-4 h-4" />
                 </label>
               </div>
               <div>
                 <label className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium">Cảnh báo Email</span>
+                  <span className="text-sm font-medium">Email Alerts</span>
                   <input type="checkbox" defaultChecked className="w-4 h-4" />
                 </label>
               </div>
               <div>
                 <label className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium">Chế độ bảo mật cao</span>
+                  <span className="text-sm font-medium">High Security Mode</span>
                   <input type="checkbox" defaultChecked className="w-4 h-4" />
                 </label>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Thời gian backup (giờ)</label>
+                <label className="block text-sm font-medium mb-2">Backup Time (hours)</label>
                 <input type="time" defaultValue="02:00" className="w-full border rounded px-3 py-2" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Mức độ log</label>
+                <label className="block text-sm font-medium mb-2">Log Level</label>
                 <select className="w-full border rounded px-3 py-2">
                   <option>Info</option>
                   <option>Warning</option>
@@ -776,13 +776,13 @@ export default function AdminDashboard() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Session timeout (phút)</label>
+                <label className="block text-sm font-medium mb-2">Session Timeout (minutes)</label>
                 <input type="number" defaultValue="30" className="w-full border rounded px-3 py-2" />
               </div>
             </div>
             <div className="flex space-x-3 mt-6">
-              <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Đóng</button>
-              <button onClick={() => { alert('Đã lưu cài đặt hệ thống!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Lưu</button>
+              <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Close</button>
+              <button onClick={() => { alert('System settings saved!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
             </div>
           </div>
         </div>

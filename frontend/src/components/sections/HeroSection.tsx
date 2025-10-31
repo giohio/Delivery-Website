@@ -9,7 +9,7 @@ import { Card } from '../ui/card';
 export function HeroSection() {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const fullText = 'Giao Hàng Siêu Tốc';
+  const fullText = 'Super Fast Delivery';
   
   const [fromAddress, setFromAddress] = useState('');
   const [toAddress, setToAddress] = useState('');
@@ -78,8 +78,8 @@ export function HeroSection() {
               transition={{ duration: 0.8, delay: 0.3 }}
               className="text-lg sm:text-xl text-light-grey mb-8 max-w-2xl mx-auto lg:mx-0"
             >
-              Dịch vụ giao hàng nhanh chóng, an toàn và tiện lợi. 
-              Kết nối khách hàng, tài xế và người bán trong một nền tảng thống nhất.
+              Fast, safe, and convenient delivery service. 
+              Connecting customers, drivers, and merchants in one unified platform.
             </motion.p>
 
             <motion.div
@@ -92,14 +92,14 @@ export function HeroSection() {
                 size="lg"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-4 text-lg font-semibold"
               >
-                Tạo đơn hàng
+                Create Order
               </Button>
               <Button
                 variant="outline"
                 size="lg"
                 className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-4 text-lg"
               >
-                Tìm hiểu thêm
+                Learn More
               </Button>
             </motion.div>
 
@@ -112,15 +112,15 @@ export function HeroSection() {
             >
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">10K+</div>
-                <div className="text-sm text-light-grey">Đơn hàng</div>
+                <div className="text-sm text-light-grey">Orders</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">500+</div>
-                <div className="text-sm text-light-grey">Tài xế</div>
+                <div className="text-sm text-light-grey">Drivers</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">30 phút</div>
-                <div className="text-sm text-light-grey">Trung bình</div>
+                <div className="text-2xl font-bold text-primary">30 min</div>
+                <div className="text-sm text-light-grey">Average</div>
               </div>
             </motion.div>
           </div>
@@ -135,19 +135,19 @@ export function HeroSection() {
               <div className="flex items-center space-x-2 mb-6">
                 <Calculator className="w-5 h-5 text-primary" />
                 <h3 className="text-xl font-heading font-semibold text-foreground">
-                  Ước tính chi phí
+                  Estimate Cost
                 </h3>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-light-grey mb-2">
-                    Địa chỉ gửi
+                    Pickup Address
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 w-4 h-4 text-light-grey" />
                     <Input
-                      placeholder="Nhập địa chỉ gửi hàng"
+                      placeholder="Enter pickup address"
                       value={fromAddress}
                       onChange={(e) => setFromAddress(e.target.value)}
                       className="pl-10 bg-white border-gray-300 text-foreground placeholder:text-light-grey"
@@ -157,12 +157,12 @@ export function HeroSection() {
 
                 <div>
                   <label className="block text-sm font-medium text-light-grey mb-2">
-                    Địa chỉ nhận
+                    Delivery Address
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 w-4 h-4 text-light-grey" />
                     <Input
-                      placeholder="Nhập địa chỉ nhận hàng"
+                      placeholder="Enter delivery address"
                       value={toAddress}
                       onChange={(e) => setToAddress(e.target.value)}
                       className="pl-10 bg-white border-gray-300 text-foreground placeholder:text-light-grey"
@@ -173,7 +173,7 @@ export function HeroSection() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-light-grey mb-2">
-                      Khối lượng (kg)
+                      Weight (kg)
                     </label>
                     <div className="relative">
                       <Package className="absolute left-3 top-3 w-4 h-4 text-light-grey" />
@@ -189,17 +189,17 @@ export function HeroSection() {
 
                   <div>
                     <label className="block text-sm font-medium text-light-grey mb-2">
-                      Dịch vụ
+                      Service
                     </label>
                     <Select value={service} onValueChange={setService}>
                       <SelectTrigger className="bg-white border-gray-300 text-foreground">
                         <Clock className="w-4 h-4 text-light-grey mr-2" />
-                        <SelectValue placeholder="Chọn dịch vụ" />
+                        <SelectValue placeholder="Select service" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="standard">Tiêu chuẩn (2-4h)</SelectItem>
-                        <SelectItem value="express">Nhanh (1-2h)</SelectItem>
-                        <SelectItem value="same-day">Trong ngày</SelectItem>
+                        <SelectItem value="standard">Standard (2-4h)</SelectItem>
+                        <SelectItem value="express">Express (1-2h)</SelectItem>
+                        <SelectItem value="same-day">Same Day</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -210,7 +210,7 @@ export function HeroSection() {
                   className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={!fromAddress || !toAddress || !weight || !service}
                 >
-                  Tính chi phí
+                  Calculate Cost
                 </Button>
 
                 {estimatedPrice && (
@@ -219,7 +219,7 @@ export function HeroSection() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="bg-primary/10 border border-primary/30 rounded-lg p-4 text-center"
                   >
-                    <div className="text-sm text-light-grey">Chi phí ước tính</div>
+                    <div className="text-sm text-light-grey">Estimated Cost</div>
                     <div className="text-2xl font-bold text-primary">
                       {estimatedPrice.toLocaleString('vi-VN')} VNĐ
                     </div>

@@ -25,7 +25,7 @@ const SignUp: React.FC = () => {
       login(userData);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Đăng ký bằng Google thất bại');
+      setError(err.message || 'Google signup failed');
       console.error('Google signup error:', err);
     } finally {
       setLoading(false);
@@ -40,7 +40,7 @@ const SignUp: React.FC = () => {
       login(userData);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Đăng ký bằng Facebook thất bại');
+      setError(err.message || 'Facebook signup failed');
       console.error('Facebook signup error:', err);
     } finally {
       setLoading(false);
@@ -93,12 +93,12 @@ const SignUp: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-blue-600 mb-2">FastDelivery</h1>
-          <p className="text-gray-600">Dịch vụ giao hàng nhanh chóng</p>
+          <p className="text-gray-600">Fast Delivery Service</p>
         </div>
 
         {/* Sign Up Card */}
         <div className="bg-white rounded-2xl shadow-md p-8">
-          <h2 className="text-3xl font-bold text-center mb-8">Đăng ký</h2>
+          <h2 className="text-3xl font-bold text-center mb-8">Sign Up</h2>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
@@ -184,9 +184,9 @@ const SignUp: React.FC = () => {
 
             {/* Login Link */}
             <div className="text-sm text-center">
-              <span className="text-gray-600">Đã có tài khoản? </span>
+              <span className="text-gray-600">Already have an account? </span>
               <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-                Đăng nhập
+                Login
               </Link>
             </div>
 
@@ -195,7 +195,7 @@ const SignUp: React.FC = () => {
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors"
             >
-              Đăng ký
+              Sign Up
             </button>
           </form>
 
@@ -205,7 +205,7 @@ const SignUp: React.FC = () => {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">hoặc</span>
+              <span className="px-2 bg-white text-gray-500">or</span>
             </div>
           </div>
 
@@ -215,7 +215,7 @@ const SignUp: React.FC = () => {
               onClick={handleGoogleSignUp}
               disabled={loading}
               className="flex items-center justify-center gap-2 px-3 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Đăng ký với Google"
+              title="Sign Up with Google"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -243,7 +243,7 @@ const SignUp: React.FC = () => {
               onClick={handleFacebookSignUp}
               disabled={loading}
               className="flex items-center justify-center gap-2 px-3 py-3 bg-[#1877F2] text-white rounded-xl hover:bg-[#166FE5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Đăng ký với Facebook"
+              title="Sign Up with Facebook"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />

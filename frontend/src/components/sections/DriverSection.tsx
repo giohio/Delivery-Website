@@ -7,43 +7,43 @@ import { Badge } from '../ui/badge';
 const driverBenefits = [
   {
     icon: DollarSign,
-    title: 'Thu nhập hấp dẫn',
-    description: 'Kiếm từ 500k - 1.5M VNĐ/ngày với hệ thống thưởng linh hoạt',
+    title: 'Attractive Income',
+    description: 'Earn 500k - 1.5M VND/day with flexible bonus system',
     color: 'text-primary'
   },
   {
     icon: Clock,
-    title: 'Thời gian linh hoạt',
-    description: 'Tự do lựa chọn giờ làm việc phù hợp với lịch trình cá nhân',
+    title: 'Flexible Schedule',
+    description: 'Choose working hours that fit your personal schedule',
     color: 'text-secondary'
   },
   {
     icon: Car,
-    title: 'Hỗ trợ phương tiện',
-    description: 'Chương trình cho thuê xe với giá ưu đãi và bảo hiểm toàn diện',
+    title: 'Vehicle Support',
+    description: 'Vehicle rental program with preferential prices and comprehensive insurance',
     color: 'text-accent'
   },
   {
     icon: Star,
-    title: 'Thưởng hiệu suất',
-    description: 'Hệ thống đánh giá công bằng với các mức thưởng theo thành tích',
+    title: 'Performance Bonus',
+    description: 'Fair rating system with achievement-based bonus levels',
     color: 'text-primary'
   }
 ];
 
 const requirements = [
-  'Tuổi từ 18-55, có GPLX hạng A1 trở lên',
-  'Có phương tiện giao thông (xe máy/ô tô)',
-  'Điện thoại thông minh có GPS',
-  'Thái độ phục vụ tốt, trung thực',
-  'Cam kết làm việc tối thiểu 20h/tuần'
+  'Age 18-55, motorcycle license or higher',
+  'Own vehicle (motorcycle/car)',
+  'Smartphone with GPS',
+  'Good service attitude, honest',
+  'Minimum 20h/week commitment'
 ];
 
 const earnings = [
-  { level: 'Mới', orders: '0-50', rate: '15,000', bonus: '0%' },
-  { level: 'Đồng', orders: '51-200', rate: '17,000', bonus: '5%' },
-  { level: 'Bạc', orders: '201-500', rate: '20,000', bonus: '10%' },
-  { level: 'Vàng', orders: '500+', rate: '25,000', bonus: '15%' }
+  { level: 'New', orders: '0-50', rate: '15,000', bonus: '0%' },
+  { level: 'Bronze', orders: '51-200', rate: '17,000', bonus: '5%' },
+  { level: 'Silver', orders: '201-500', rate: '20,000', bonus: '10%' },
+  { level: 'Gold', orders: '500+', rate: '25,000', bonus: '15%' }
 ];
 
 export function DriverSection() {
@@ -58,11 +58,11 @@ export function DriverSection() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-foreground mb-6">
-            Trở thành <span className="text-primary">Tài xế</span> FastDelivery
+            Become a <span className="text-primary">Driver</span> at FastDelivery
           </h2>
           <p className="text-lg text-light-grey max-w-3xl mx-auto">
-            Tham gia đội ngũ tài xế chuyên nghiệp của chúng tôi. 
-            Kiếm thu nhập ổn định với thời gian làm việc linh hoạt.
+            Join our professional driver team. 
+            Earn stable income with flexible working hours.
           </p>
         </motion.div>
 
@@ -75,7 +75,7 @@ export function DriverSection() {
             viewport={{ once: true }}
           >
             <h3 className="text-2xl font-heading font-bold text-foreground mb-8">
-              Lợi ích khi làm việc cùng chúng tôi
+              Benefits of working with us
             </h3>
             
             <div className="space-y-6">
@@ -115,7 +115,7 @@ export function DriverSection() {
             viewport={{ once: true }}
           >
             <h3 className="text-2xl font-heading font-bold text-foreground mb-8">
-              Yêu cầu ứng tuyển
+              Application Requirements
             </h3>
             
             <Card className="bg-white/80 backdrop-blur-lg border border-gray-200 p-6 mb-6 shadow-sm">
@@ -140,11 +140,11 @@ export function DriverSection() {
 
             <div className="space-y-4">
               <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-3">
-                Đăng ký làm tài xế
+                Register as Driver
               </Button>
               
               <Button variant="outline" className="w-full border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground">
-                Tải ứng dụng tài xế
+                Download Driver App
               </Button>
             </div>
           </motion.div>
@@ -159,7 +159,7 @@ export function DriverSection() {
           className="mb-16"
         >
           <h3 className="text-2xl font-heading font-bold text-foreground mb-8 text-center">
-            Bảng thu nhập theo cấp độ
+            Earnings by Level
           </h3>
           
           <Card className="bg-white/80 backdrop-blur-lg border border-gray-200 overflow-hidden shadow-sm">
@@ -167,10 +167,10 @@ export function DriverSection() {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-foreground font-semibold">Cấp độ</th>
-                    <th className="px-6 py-4 text-left text-foreground font-semibold">Số đơn</th>
-                    <th className="px-6 py-4 text-left text-foreground font-semibold">Giá/đơn</th>
-                    <th className="px-6 py-4 text-left text-foreground font-semibold">Thưởng thêm</th>
+                    <th className="px-6 py-4 text-left text-foreground font-semibold">Level</th>
+                    <th className="px-6 py-4 text-left text-foreground font-semibold">Orders</th>
+                    <th className="px-6 py-4 text-left text-foreground font-semibold">Rate/Order</th>
+                    <th className="px-6 py-4 text-left text-foreground font-semibold">Bonus</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -185,9 +185,9 @@ export function DriverSection() {
                     >
                       <td className="px-6 py-4">
                         <Badge className={`${
-                          earning.level === 'Vàng' ? 'bg-yellow-500/20 text-yellow-400' :
-                          earning.level === 'Bạc' ? 'bg-gray-500/20 text-gray-300' :
-                          earning.level === 'Đồng' ? 'bg-orange-500/20 text-orange-400' :
+                          earning.level === 'Gold' ? 'bg-yellow-500/20 text-yellow-400' :
+                          earning.level === 'Silver' ? 'bg-gray-500/20 text-gray-300' :
+                          earning.level === 'Bronze' ? 'bg-orange-500/20 text-orange-400' :
                           'bg-primary/20 text-primary'
                         }`}>
                           {earning.level}
@@ -216,25 +216,25 @@ export function DriverSection() {
               <div className="space-y-2">
                 <Users className="w-8 h-8 text-primary mx-auto" />
                 <div className="text-2xl font-bold text-foreground">500+</div>
-                <div className="text-light-grey text-sm">Tài xế hoạt động</div>
+                <div className="text-light-grey text-sm">Active Drivers</div>
               </div>
               
               <div className="space-y-2">
                 <DollarSign className="w-8 h-8 text-secondary mx-auto" />
                 <div className="text-2xl font-bold text-foreground">850K</div>
-                <div className="text-light-grey text-sm">Thu nhập TB/ngày</div>
+                <div className="text-light-grey text-sm">Avg Income/Day</div>
               </div>
               
               <div className="space-y-2">
                 <TrendingUp className="w-8 h-8 text-accent mx-auto" />
                 <div className="text-2xl font-bold text-foreground">95%</div>
-                <div className="text-light-grey text-sm">Tỷ lệ hài lòng</div>
+                <div className="text-light-grey text-sm">Satisfaction Rate</div>
               </div>
               
               <div className="space-y-2">
                 <Clock className="w-8 h-8 text-primary mx-auto" />
                 <div className="text-2xl font-bold text-foreground">6h</div>
-                <div className="text-light-grey text-sm">Làm việc TB/ngày</div>
+                <div className="text-light-grey text-sm">Avg Work/Day</div>
               </div>
             </div>
           </Card>

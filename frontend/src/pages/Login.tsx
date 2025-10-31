@@ -24,7 +24,7 @@ const Login: React.FC = () => {
       login(userData);
       redirectToRoleDashboard(roleName);
     } catch (err: any) {
-      setError(err.message || 'Đăng nhập bằng Google thất bại');
+      setError(err.message || 'Google login failed');
       console.error('Google login error:', err);
     } finally {
       setLoading(false);
@@ -40,7 +40,7 @@ const Login: React.FC = () => {
       login(userData);
       redirectToRoleDashboard(roleName);
     } catch (err: any) {
-      setError(err.message || 'Đăng nhập bằng Facebook thất bại');
+      setError(err.message || 'Facebook login failed');
       console.error('Facebook login error:', err);
     } finally {
       setLoading(false);
@@ -92,7 +92,7 @@ const Login: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || 'Đăng nhập thất bại');
+        throw new Error(data.error || 'Login failed');
       }
       if (data.token) {
         localStorage.setItem('token', data.token);
@@ -112,7 +112,7 @@ const Login: React.FC = () => {
       login(userData, data.token);
       redirectToRoleDashboard(roleName);
     } catch (err: any) {
-      setError(err.message || 'Đăng nhập thất bại');
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -131,12 +131,12 @@ const Login: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-blue-600 mb-2">FastDelivery</h1>
-          <p className="text-gray-600">Dịch vụ giao hàng nhanh chóng</p>
+          <p className="text-gray-600">Fast Delivery Service</p>
         </div>
 
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-md p-8">
-          <h2 className="text-3xl font-bold text-center mb-8">Đăng nhập</h2>
+          <h2 className="text-3xl font-bold text-center mb-8">Login</h2>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
@@ -200,14 +200,14 @@ const Login: React.FC = () => {
                   type="checkbox"
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-600">Ghi nhớ đăng nhập</span>
+                <span className="ml-2 text-sm text-gray-600">Remember me</span>
               </label>
               <div className="flex items-center justify-between text-sm">
                 <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
-                  Đăng ký
+                  Sign Up
                 </Link>
                 <a href="#" className="text-blue-600 hover:text-blue-700">
-                  Quên mật khẩu?
+                  Forgot password?
                 </a>
               </div>
             </div>
@@ -217,7 +217,7 @@ const Login: React.FC = () => {
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors"
             >
-              Đăng nhập
+              Login
             </button>
           </form>
 
@@ -227,7 +227,7 @@ const Login: React.FC = () => {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">hoặc</span>
+              <span className="px-2 bg-white text-gray-500">or</span>
             </div>
           </div>
 
@@ -237,7 +237,7 @@ const Login: React.FC = () => {
               onClick={handleGoogleLogin}
               disabled={loading}
               className="flex items-center justify-center gap-2 px-3 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Đăng nhập với Google"
+              title="Login with Google"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -265,7 +265,7 @@ const Login: React.FC = () => {
               onClick={handleFacebookLogin}
               disabled={loading}
               className="flex items-center justify-center gap-2 px-3 py-3 bg-[#1877F2] text-white rounded-xl hover:bg-[#166FE5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Đăng nhập với Facebook"
+              title="Login with Facebook"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />

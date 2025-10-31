@@ -3,66 +3,66 @@ import { Users, Check, Upload, BarChart3, CreditCard, Zap, Code, Database, Webho
 const features = [
   {
     icon: Upload,
-    title: 'Tải lên đơn hàng hàng loạt',
-    desc: 'Import dễ dàng từ file Excel/CSV',
+    title: 'Bulk Upload Orders',
+    desc: 'Easy import from Excel/CSV files',
     color: 'text-blue-600'
   },
   {
     icon: BarChart3,
-    title: 'Phân tích và báo cáo chi tiết',
-    desc: 'Dashboard thống kê toàn diện',
+    title: 'Detailed Analytics & Reports',
+    desc: 'Comprehensive statistics dashboard',
     color: 'text-green-600'
   },
   {
     icon: CreditCard,
-    title: 'Phương thức thanh toán linh hoạt',
-    desc: 'Hỗ trợ nhiều hình thức thanh toán',
+    title: 'Flexible Payment Methods',
+    desc: 'Multiple payment options supported',
     color: 'text-purple-600'
   },
   {
     icon: Zap,
-    title: 'Khả năng tích hợp API',
-    desc: 'Tích hợp dễ dàng với hệ thống của bạn',
+    title: 'API Integration',
+    desc: 'Easy integration with your system',
     color: 'text-orange-600'
   }
 ];
 
 const pricingPlans = [
   {
-    name: 'Cơ bản',
+    name: 'Basic',
     price: '18,000',
     color: 'from-blue-500 to-blue-600',
     features: [
-      'Đến 100 đơn hàng/tháng',
-      'Dashboard cơ bản',
-      'Hỗ trợ qua email',
-      'Tải lên file Excel'
+      'Up to 100 orders/month',
+      'Basic dashboard',
+      'Email support',
+      'Excel file upload'
     ],
     popular: false
   },
   {
-    name: 'Chuyên nghiệp',
+    name: 'Professional',
     price: '16,000',
     color: 'from-purple-500 to-purple-600',
     features: [
-      'Đến 1,000 đơn hàng/tháng',
-      'Dashboard nâng cao',
-      'Hỗ trợ 24/7',
-      'API tích hợp',
-      'Báo cáo chi tiết'
+      'Up to 1,000 orders/month',
+      'Advanced dashboard',
+      '24/7 support',
+      'API integration',
+      'Detailed reports'
     ],
     popular: true
   },
   {
-    name: 'Doanh nghiệp',
+    name: 'Enterprise',
     price: '14,000',
     color: 'from-green-500 to-green-600',
     features: [
-      'Không giới hạn đơn hàng',
-      'Tính năng đầy đủ',
-      'Quản lý tài khoản riêng',
-      'Tích hợp tùy chỉnh',
-      'SLA ưu tiên'
+      'Unlimited orders',
+      'Full features',
+      'Dedicated account manager',
+      'Custom integration',
+      'Priority SLA'
     ],
     popular: false
   }
@@ -72,30 +72,30 @@ const apiFeatures = [
   {
     icon: Code,
     title: 'API RESTful',
-    desc: 'API đầy đủ và dễ sử dụng'
+    desc: 'Complete and easy-to-use API'
   },
   {
     icon: Webhook,
     title: 'Webhooks',
-    desc: 'Nhận thông báo thời gian thực'
+    desc: 'Real-time notifications'
   },
   {
     icon: Database,
     title: 'SDKs',
-    desc: 'Thư viện cho PHP, Node.js, Python'
+    desc: 'Libraries for PHP, Node.js, Python'
   },
   {
     icon: Shield,
-    title: 'Môi trường Sandbox',
-    desc: 'Test API trước khi triển khai'
+    title: 'Sandbox Environment',
+    desc: 'Test API before deployment'
   }
 ];
 
 const tools = [
-  'Mẫu tải lên hàng loạt Excel/CSV',
-  'Dashboard phân tích chi tiết',
-  'Công cụ tích hợp tùy chỉnh',
-  'Báo cáo doanh thu và hiệu suất'
+  'Bulk upload Excel/CSV templates',
+  'Detailed analytics dashboard',
+  'Custom integration tools',
+  'Revenue and performance reports'
 ];
 
 export function MerchantSection() {
@@ -105,10 +105,10 @@ export function MerchantSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            🏦 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Giải pháp cho Người bán</span>
+            🏦 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Solutions for Merchants</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Tối ưu hóa quy trình giao hàng với các công cụ quản lý chuyên nghiệp và API mạnh mẽ
+            Optimize delivery process with professional management tools and powerful API
           </p>
         </div>
 
@@ -127,7 +127,7 @@ export function MerchantSection() {
 
         {/* Pricing Plans */}
         <div className="bg-white rounded-3xl p-8 shadow-xl mb-16">
-          <h3 className="text-3xl font-bold text-center mb-8 text-gray-900">💰 Các gói giá</h3>
+          <h3 className="text-3xl font-bold text-center mb-8 text-gray-900">💰 Pricing Plans</h3>
           <div className="grid md:grid-cols-3 gap-8">
             {pricingPlans.map((plan, index) => (
               <div key={index} className={`rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${
@@ -135,13 +135,13 @@ export function MerchantSection() {
               }`}>
                 {plan.popular && (
                   <div className="bg-purple-600 text-white text-center py-2 text-sm font-bold">
-                    Phổ biến nhất
+                    Most Popular
                   </div>
                 )}
                 <div className={`bg-gradient-to-br ${plan.color} p-6 text-white text-center`}>
                   <h4 className="text-2xl font-bold mb-2">{plan.name}</h4>
                   <div className="text-4xl font-bold mb-1">{plan.price}</div>
-                  <div className="text-sm opacity-90">VND mỗi đơn hàng</div>
+                  <div className="text-sm opacity-90">VND per order</div>
                 </div>
                 <div className="p-6">
                   <ul className="space-y-3">
@@ -157,7 +157,7 @@ export function MerchantSection() {
                       ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg' 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}>
-                    Chọn gói {plan.name}
+                    Choose {plan.name}
                   </button>
                 </div>
               </div>
@@ -170,7 +170,7 @@ export function MerchantSection() {
           <div className="bg-white rounded-3xl p-8 shadow-lg">
             <h3 className="text-3xl font-bold mb-6 text-gray-900 flex items-center">
               <Code className="w-8 h-8 mr-3 text-purple-600" />
-              Kỹ thuật tích hợp
+              Integration Technology
             </h3>
             <div className="grid grid-cols-2 gap-6 mb-8">
               {apiFeatures.map((feature, index) => (
@@ -183,12 +183,12 @@ export function MerchantSection() {
             </div>
             
             <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 text-white">
-              <h4 className="font-bold mb-3">🚀 Bắt đầu ngay</h4>
+              <h4 className="font-bold mb-3">🚀 Get Started</h4>
               <p className="text-sm text-purple-100 mb-4">
-                Tài liệu API đầy đủ, SDK và hỗ trợ kỹ thuật 24/7
+                Complete API documentation, SDKs and 24/7 technical support
               </p>
               <button className="bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition-all">
-                Xem tài liệu API
+                View API Docs
               </button>
             </div>
           </div>
@@ -199,7 +199,7 @@ export function MerchantSection() {
             <div className="bg-white rounded-3xl p-8 shadow-lg">
               <h3 className="text-3xl font-bold mb-6 text-gray-900 flex items-center">
                 <FileText className="w-8 h-8 mr-3 text-green-600" />
-                Công cụ hỗ trợ
+                Support Tools
               </h3>
               <ul className="space-y-4">
                 {tools.map((tool, index) => (
@@ -215,19 +215,19 @@ export function MerchantSection() {
 
             {/* CTA */}
             <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-8 text-white text-center">
-              <h3 className="text-2xl font-bold mb-4">Sẵn sàng tối ưu hóa?</h3>
+              <h3 className="text-2xl font-bold mb-4">Ready to Optimize?</h3>
               <p className="text-purple-100 mb-6">
-                Tham gia cùng hàng nghìn người bán đang tin tưởng FastDelivery
+                Join thousands of merchants trusting FastDelivery
               </p>
               <button className="bg-white text-purple-600 px-8 py-4 rounded-full font-semibold hover:shadow-2xl transform hover:scale-105 transition-all duration-200 flex items-center mx-auto">
                 <Users className="mr-2" />
-                Đăng ký Merchant ngay
+                Register as Merchant
               </button>
               
               <div className="mt-6 flex items-center justify-center space-x-6 text-sm text-purple-100">
                 <div className="flex items-center">
                   <TrendingUp className="w-4 h-4 mr-1" />
-                  <span>Miễn phí 30 ngày đầu</span>
+                  <span>Free 30 days trial</span>
                 </div>
               </div>
             </div>

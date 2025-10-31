@@ -5,19 +5,19 @@ const demoTracking = {
   orderId: 'FD240110001',
   status: 'delivering',
   driver: {
-    name: 'Nguyễn Văn An',
+    name: 'John Doe',
     phone: '0901234567',
     rating: 4.8,
     vehicle: 'Honda Wave - 29A1-12345'
   },
   timeline: [
-    { status: 'confirmed', time: '14:30', desc: 'Đơn hàng được xác nhận', completed: true },
-    { status: 'picked', time: '14:45', desc: 'Tài xế đã lấy hàng', completed: true },
-    { status: 'delivering', time: '15:10', desc: 'Đang giao hàng', completed: true },
-    { status: 'delivered', time: '15:30', desc: 'Giao hàng thành công', completed: false }
+    { status: 'confirmed', time: '14:30', desc: 'Order confirmed', completed: true },
+    { status: 'picked', time: '14:45', desc: 'Driver picked up package', completed: true },
+    { status: 'delivering', time: '15:10', desc: 'Out for delivery', completed: true },
+    { status: 'delivered', time: '15:30', desc: 'Delivered successfully', completed: false }
   ],
   estimatedTime: '15:30',
-  currentLocation: 'Đang di chuyển trên đường Nguyễn Trãi'
+  currentLocation: 'Moving on Nguyen Trai Street'
 };
 
 export function TrackingSection() {
@@ -46,10 +46,10 @@ export function TrackingSection() {
         {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-white">
-            📱 <span className="text-yellow-300">Theo dõi đơn hàng</span>
+            📱 <span className="text-yellow-300">Track Your Order</span>
           </h2>
           <p className="text-white/90 mb-8 text-xl max-w-3xl mx-auto">
-            Theo dõi đơn hàng thời gian thực với mã đơn hàng hoặc số điện thoại
+            Track your order in real-time with order code or phone number
           </p>
         </div>
 
@@ -57,11 +57,11 @@ export function TrackingSection() {
           {/* Search Form */}
           <div className="space-y-8">
             <div className="bg-white rounded-3xl p-8 shadow-2xl">
-              <h3 className="text-2xl font-bold mb-6 text-gray-900 text-center">🔍 Tra cứu đơn hàng</h3>
+              <h3 className="text-2xl font-bold mb-6 text-gray-900 text-center">🔍 Track Order</h3>
               <div className="space-y-4">
                 <input
                   type="text"
-                  placeholder="Nhập mã đơn hàng (VD: FD240110001)..."
+                  placeholder="Enter order code (e.g. FD240110001)..."
                   value={trackingCode}
                   onChange={(event) => setTrackingCode(event.target.value)}
                   className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
@@ -72,30 +72,30 @@ export function TrackingSection() {
                   className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center"
                 >
                   <Search className="mr-2" />
-                  Tra cứu ngay
+                  Track Now
                 </button>
               </div>
             </div>
 
             {/* Features */}
             <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 text-white">
-              <h3 className="text-2xl font-bold mb-6 text-center">✨ Tính năng theo dõi</h3>
+              <h3 className="text-2xl font-bold mb-6 text-center">✨ Tracking Features</h3>
               <div className="grid grid-cols-1 gap-4">
                 <div className="flex items-center space-x-3">
                   <MapPin className="w-6 h-6 text-yellow-300" />
-                  <span>Theo dõi GPS thời gian thực</span>
+                  <span>Real-time GPS tracking</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Bell className="w-6 h-6 text-yellow-300" />
-                  <span>Thông báo tức thì qua SMS/Email</span>
+                  <span>Instant SMS/Email notifications</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Clock className="w-6 h-6 text-yellow-300" />
-                  <span>Lịch sử giao hàng đầy đủ</span>
+                  <span>Complete delivery history</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <User className="w-6 h-6 text-yellow-300" />
-                  <span>Thông tin tài xế và liên hệ</span>
+                  <span>Driver info and contact</span>
                 </div>
               </div>
             </div>
@@ -106,13 +106,13 @@ export function TrackingSection() {
             {!showDemo ? (
               <div className="text-center py-12">
                 <Package className="w-24 h-24 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-400 mb-2">Demo theo dõi</h3>
-                <p className="text-gray-500 mb-6">Nhập mã đơn hàng để xem demo theo dõi trực tiếp</p>
+                <h3 className="text-2xl font-bold text-gray-400 mb-2">Tracking Demo</h3>
+                <p className="text-gray-500 mb-6">Enter order code to see live tracking demo</p>
                 <button 
                   onClick={() => {setTrackingCode('FD240110001'); setShowDemo(true);}}
                   className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
                 >
-                  Xem demo
+                  View Demo
                 </button>
               </div>
             ) : (
@@ -121,14 +121,14 @@ export function TrackingSection() {
                 <div className="border-b border-gray-200 pb-6 mb-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900">Đơn hàng #{demoTracking.orderId}</h3>
+                      <h3 className="text-2xl font-bold text-gray-900">Order #{demoTracking.orderId}</h3>
                       <p className="text-green-600 font-semibold flex items-center mt-1">
                         <Truck className="w-4 h-4 mr-1" />
-                        Đang giao hàng
+                        Out for Delivery
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-500">Dự kiến giao:</p>
+                      <p className="text-sm text-gray-500">Estimated:</p>
                       <p className="text-lg font-bold text-blue-600">{demoTracking.estimatedTime}</p>
                     </div>
                   </div>
@@ -142,7 +142,7 @@ export function TrackingSection() {
                 <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 mb-6">
                   <h4 className="font-bold text-gray-900 mb-3 flex items-center">
                     <User className="w-5 h-5 mr-2" />
-                    Thông tin tài xế
+                    Driver Information
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -163,7 +163,7 @@ export function TrackingSection() {
                 <div className="space-y-4">
                   <h4 className="font-bold text-gray-900 flex items-center">
                     <Clock className="w-5 h-5 mr-2" />
-                    Tiến trình giao hàng
+                    Delivery Progress
                   </h4>
                   {demoTracking.timeline.map((step, index) => (
                     <div key={index} className={`flex items-start space-x-4 pb-4 ${

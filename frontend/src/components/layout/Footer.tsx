@@ -5,25 +5,25 @@ import { Input } from '@/components/ui/input';
 
 const footerLinks = {
   services: [
-    { name: 'Giao hàng tiêu chuẩn', href: '#' },
-    { name: 'Giao hàng nhanh', href: '#' },
-    { name: 'Giao hàng siêu tốc', href: '#' },
-    { name: 'Thu hộ COD', href: '#' },
-    { name: 'Giao hàng cuối tuần', href: '#' }
+    { name: 'Standard Delivery', href: '#' },
+    { name: 'Fast Delivery', href: '#' },
+    { name: 'Express Delivery', href: '#' },
+    { name: 'COD Collection', href: '#' },
+    { name: 'Weekend Delivery', href: '#' }
   ],
   company: [
-    { name: 'Về chúng tôi', href: '#' },
-    { name: 'Tin tức', href: '#' },
-    { name: 'Tuyển dụng', href: '#' },
-    { name: 'Liên hệ', href: '#' },
-    { name: 'Đối tác', href: '#' }
+    { name: 'About Us', href: '#' },
+    { name: 'News', href: '#' },
+    { name: 'Careers', href: '#' },
+    { name: 'Contact', href: '#' },
+    { name: 'Partners', href: '#' }
   ],
   support: [
-    { name: 'Trung tâm trợ giúp', href: '#' },
-    { name: 'Hướng dẫn sử dụng', href: '#' },
-    { name: 'Chính sách vận chuyển', href: '#' },
-    { name: 'Điều khoản sử dụng', href: '#' },
-    { name: 'Chính sách bảo mật', href: '#' }
+    { name: 'Help Center', href: '#' },
+    { name: 'User Guide', href: '#' },
+    { name: 'Shipping Policy', href: '#' },
+    { name: 'Terms of Use', href: '#' },
+    { name: 'Privacy Policy', href: '#' }
   ]
 };
 
@@ -40,7 +40,7 @@ export function Footer() {
               <span className="text-2xl font-bold">FastShip</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Giải pháp giao hàng thông minh, nhanh chóng và đáng tin cậy cho mọi nhu cầu của bạn.
+              Smart, fast and reliable delivery solution for all your needs.
             </p>
             <div className="flex space-x-4">
               <Facebook className="h-5 w-5 text-gray-400 hover:text-white cursor-pointer transition-colors" />
@@ -52,7 +52,7 @@ export function Footer() {
 
           {/* Services */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Dịch vụ</h4>
+            <h4 className="font-semibold text-lg mb-4">Services</h4>
             <ul className="space-y-2">
               {footerLinks.services.map((service) => (
                 <li key={service.name}>
@@ -69,7 +69,7 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Công ty</h4>
+            <h4 className="font-semibold text-lg mb-4">Company</h4>
             <ul className="space-y-2">
               {footerLinks.company.map((item) => (
                 <li key={item.name}>
@@ -86,18 +86,18 @@ export function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h4 className="font-semibold text-lg mb-4">Nhận tin tức</h4>
+            <h4 className="font-semibold text-lg mb-4">Newsletter</h4>
             <p className="text-gray-400 text-sm mb-4">
-              Đăng ký để nhận thông tin khuyến mãi và tin tức mới nhất
+              Subscribe to receive promotions and latest news
             </p>
             <div className="space-y-2">
               <Input 
                 type="email" 
-                placeholder="Email của bạn"
+                placeholder="Your email"
                 className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
               />
               <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                Đăng ký
+                Subscribe
               </Button>
             </div>
           </div>
@@ -138,8 +138,8 @@ export function Footer() {
             <div className="flex items-center space-x-3">
               <MapPin className="h-5 w-5 text-blue-500" />
               <div>
-                <p className="text-sm font-medium">Địa chỉ</p>
-                <p className="text-gray-400 text-sm">Hà Nội, Việt Nam</p>
+                <p className="text-sm font-medium">Address</p>
+                <p className="text-gray-400 text-sm">Hanoi, Vietnam</p>
               </div>
             </div>
           </div>

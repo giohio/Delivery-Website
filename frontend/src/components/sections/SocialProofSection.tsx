@@ -1,59 +1,59 @@
 import { Star, Quote, Shield, Clock, Award } from 'lucide-react';
 
 const stats = [
-  { value: '50,000+', label: 'Đơn hàng thành công', icon: Award },
-  { value: '1,000+', label: 'Người bán tin tưởng', icon: Star },
-  { value: '500+', label: 'Tài xế hoạt động', icon: Clock },
-  { value: '4.9/5', label: 'Đánh giá trung bình', icon: Shield }
+  { value: '50,000+', label: 'Successful Deliveries', icon: Award },
+  { value: '1,000+', label: 'Trusted Merchants', icon: Star },
+  { value: '500+', label: 'Active Drivers', icon: Clock },
+  { value: '4.9/5', label: 'Average Rating', icon: Shield }
 ];
 
 const testimonials = [
   {
-    name: 'Nguyễn Thị Lan',
-    role: 'Chủ shop thời trang',
+    name: 'Sarah Johnson',
+    role: 'Fashion Store Owner',
     rating: 5,
-    orders: '2,500+ đơn',
-    comment: 'FastDelivery giúp tôi tiết kiệm rất nhiều thời gian và chi phí. Khách hàng luôn hài lòng với tốc độ giao hàng.',
+    orders: '2,500+ orders',
+    comment: 'FastDelivery saves me a lot of time and costs. Customers are always happy with the delivery speed.',
     avatar: '👩‍💼'
   },
   {
-    name: 'Trần Văn Minh',
-    role: 'Tài xế FastDelivery',
+    name: 'Michael Chen',
+    role: 'FastDelivery Driver',
     rating: 5,
-    orders: '1,800+ chuyến',
-    comment: 'Làm việc với FastDelivery giúp tôi có thu nhập ổn định và linh hoạt thời gian. Ứng dụng rất dễ sử dụng.',
+    orders: '1,800+ trips',
+    comment: 'Working with FastDelivery gives me stable income and flexible schedule. The app is very easy to use.',
     avatar: '👨‍🚗'
   },
   {
-    name: 'Lê Thị Hương',
-    role: 'Khách hàng cá nhân',
+    name: 'Emily Wong',
+    role: 'Individual Customer',
     rating: 5,
-    orders: '150+ đơn',
-    comment: 'Dịch vụ giao hàng nhanh và đáng tin cậy. Tôi đặc biệt thích tính năng theo dõi đơn hàng thời gian thực.',
+    orders: '150+ orders',
+    comment: 'Fast and reliable delivery service. I especially love the real-time order tracking feature.',
     avatar: '👩'
   },
   {
-    name: 'Phạm Đào Quân',
-    role: 'Quản lý cửa hàng',
+    name: 'David Park',
+    role: 'Store Manager',
     rating: 5,
-    orders: '3,200+ đơn',
-    comment: 'API của FastDelivery rất mạnh mẽ, giúp chúng tôi tích hợp dễ dàng vào hệ thống quản lý.',
+    orders: '3,200+ orders',
+    comment: 'FastDelivery API is very powerful, making it easy to integrate into our management system.',
     avatar: '👨‍💻'
   },
   {
-    name: 'Vũ Thị Mai',
-    role: 'Tài xế bán thời gian',
+    name: 'Lisa Nguyen',
+    role: 'Part-time Driver',
     rating: 5,
-    orders: '800+ chuyến',
-    comment: 'Làm việc bán thời gian với FastDelivery giúp tôi có thêm thu nhập mà vẫn linh hoạt thời gian.',
+    orders: '800+ trips',
+    comment: 'Part-time work with FastDelivery gives me extra income while maintaining flexible schedule.',
     avatar: '👩‍🦱'
   },
   {
-    name: 'Hoàng Văn Tùng',
-    role: 'Chủ nhà hàng',
+    name: 'James Lee',
+    role: 'Restaurant Owner',
     rating: 5,
-    orders: '5,000+ đơn',
-    comment: 'Dịch vụ giao đồ ăn nhanh và giữ nhiệt độ tốt. Khách hàng rất hài lòng với chất lượng dịch vụ.',
+    orders: '5,000+ orders',
+    comment: 'Fast food delivery service that maintains temperature well. Customers are very satisfied with service quality.',
     avatar: '👨‍🍳'
   }
 ];
@@ -70,18 +70,18 @@ const partners = [
 const trustBadges = [
   {
     icon: Award,
-    title: 'Tỷ lệ thành công 99.8%',
-    desc: 'Giao hàng đúng hẹn và an toàn'
+    title: '99.8% Success Rate',
+    desc: 'On-time and safe delivery'
   },
   {
     icon: Clock,
-    title: 'Hỗ trợ 24/7',
-    desc: 'Luôn sẵn sàng hỗ trợ khách hàng'
+    title: '24/7 Support',
+    desc: 'Always ready to assist customers'
   },
   {
     icon: Shield,
-    title: 'Chứng nhận bảo mật ISO 27001',
-    desc: 'Bảo vệ thông tin khách hàng tối ưu'
+    title: 'ISO 27001 Security Certified',
+    desc: 'Optimal customer information protection'
   }
 ];
 
@@ -92,10 +92,10 @@ export function SocialProofSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            🌟 <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Khách hàng tin tưởng</span>
+            🌟 <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Trusted by Customers</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Hàng nghìn khách hàng, tài xế và người bán đã tin tưởng và sử dụng dịch vụ của chúng tôi
+            Thousands of customers, drivers and merchants trust and use our service
           </p>
         </div>
 
@@ -116,7 +116,7 @@ export function SocialProofSection() {
 
         {/* Testimonials */}
         <div className="mb-16">
-          <h3 className="text-3xl font-bold text-center mb-12 text-gray-900">💬 Lời chứng thực từ khách hàng</h3>
+          <h3 className="text-3xl font-bold text-center mb-12 text-gray-900">💬 Customer Testimonials</h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <div key={index} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
@@ -144,7 +144,7 @@ export function SocialProofSection() {
 
         {/* Partners */}
         <div className="mb-16">
-          <h3 className="text-3xl font-bold text-center mb-12 text-gray-900">🤝 Đối tác tích hợp</h3>
+          <h3 className="text-3xl font-bold text-center mb-12 text-gray-900">🤝 Integration Partners</h3>
           <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-3xl p-8">
             <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center">
               {partners.map((partner, index) => (
@@ -159,7 +159,7 @@ export function SocialProofSection() {
 
         {/* Trust Badges */}
         <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-3xl p-8 text-white">
-          <h3 className="text-3xl font-bold text-center mb-8">🏆 Huy hiệu tin cậy</h3>
+          <h3 className="text-3xl font-bold text-center mb-8">🏆 Trust Badges</h3>
           <div className="grid md:grid-cols-3 gap-8">
             {trustBadges.map((badge, index) => (
               <div key={index} className="text-center">

@@ -65,6 +65,7 @@ def ensure_schema():
                 status VARCHAR(20) NOT NULL,
                 distance_km NUMERIC(10,2),
                 price_estimate NUMERIC(12,2),
+                payment_method VARCHAR(20) DEFAULT 'cash',
                 created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
             );
             """

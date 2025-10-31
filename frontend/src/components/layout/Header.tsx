@@ -8,12 +8,12 @@ interface HeaderProps {
 }
 
 const navItems = [
-  { href: '#benefits', label: 'Lợi ích' },
-  { href: '#how-it-works', label: 'Cách hoạt động' },
-  { href: '#pricing', label: 'Bảng giá' },
-  { href: '#tracking', label: 'Tra cứu' },
-  { href: '#drivers', label: 'Tài xế' },
-  { href: '#merchants', label: 'Người bán' }
+  { href: '#benefits', label: 'Benefits' },
+  { href: '#how-it-works', label: 'How It Works' },
+  { href: '#pricing', label: 'Pricing' },
+  { href: '#tracking', label: 'Tracking' },
+  { href: '#drivers', label: 'Drivers' },
+  { href: '#merchants', label: 'Merchants' }
 ];
 
 export function Header({ isScrolled }: HeaderProps) {
@@ -168,17 +168,17 @@ export function Header({ isScrolled }: HeaderProps) {
                   className={`hover:text-blue-600 transition-colors ${
                     isScrolled ? 'text-gray-700' : 'text-gray-600'
                   }`}
-                  aria-label="Đăng nhập"
+                  aria-label="Login"
                 >
-                  Đăng nhập
+                  Login
                 </button>
                 <button 
                   type="button"
                   onClick={() => navigate('/signup')}
                   className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2 rounded-full hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-                  aria-label="Đăng ký"
+                  aria-label="Sign Up"
                 >
-                  Đăng ký
+                  Sign Up
                 </button>
               </div>
             )}
@@ -201,22 +201,22 @@ export function Header({ isScrolled }: HeaderProps) {
             <div className="px-4 py-6 space-y-4">
               <nav className="flex flex-col space-y-4">
                 <a href="#benefits" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Lợi ích
+                  Benefits
                 </a>
                 <a href="#how-it-works" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Cách hoạt động
+                  How It Works
                 </a>
                 <a href="#pricing" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Bảng giá
+                  Pricing
                 </a>
                 <a href="#tracking" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Tra cứu
+                  Tracking
                 </a>
                 <a href="#drivers" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Tài xế
+                  Drivers
                 </a>
                 <a href="#merchants" className="text-gray-700 hover:text-blue-600 transition-colors">
-                  Người bán
+                  Merchants
                 </a>
               </nav>
               
@@ -270,7 +270,7 @@ export function Header({ isScrolled }: HeaderProps) {
                       }}
                       className="block w-full text-left text-red-600 hover:text-red-700 transition-colors"
                     >
-                      Đăng xuất
+                      Logout
                     </button>
                   </>
                 ) : (
@@ -282,9 +282,9 @@ export function Header({ isScrolled }: HeaderProps) {
                         setIsMobileMenuOpen(false);
                       }}
                       className="block w-full text-left text-gray-700 hover:text-blue-600 transition-colors"
-                      aria-label="Đăng nhập"
+                      aria-label="Login"
                     >
-                      Đăng nhập
+                      Login
                     </button>
                     <button 
                       type="button"
@@ -293,9 +293,9 @@ export function Header({ isScrolled }: HeaderProps) {
                         setIsMobileMenuOpen(false);
                       }}
                       className="block w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-full hover:shadow-lg transition-all duration-200 text-center"
-                      aria-label="Đăng ký"
+                      aria-label="Sign Up"
                     >
-                      Đăng ký
+                      Sign Up
                     </button>
                   </>
                 )}

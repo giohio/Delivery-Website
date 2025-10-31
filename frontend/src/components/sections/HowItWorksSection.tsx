@@ -5,32 +5,32 @@ import { Card } from '../ui/card';
 const steps = [
   {
     icon: Package,
-    title: 'Đặt hàng dễ dàng',
-    description: 'Chỉ cần vài thao tác đơn giản để tạo đơn hàng. Nhập địa chỉ, chọn dịch vụ và xem giá ngay lập tức.',
+    title: 'Easy Ordering',
+    description: 'Just a few simple steps to create an order. Enter address, select service and see price instantly.',
     color: 'from-blue-500 to-blue-600',
     iconBg: 'bg-gradient-to-br from-blue-500 to-blue-600',
     number: '01'
   },
   {
     icon: MapPin,
-    title: 'Xác nhận thông tin',
-    description: 'Kiểm tra kỹ địa chỉ giao nhận và thông tin liên hệ. Chọn thời gian giao hàng phù hợp nhất.',
+    title: 'Confirm Information',
+    description: 'Carefully check pickup/delivery addresses and contact info. Choose the most suitable delivery time.',
     color: 'from-purple-500 to-purple-600',
     iconBg: 'bg-gradient-to-br from-purple-500 to-purple-600',
     number: '02'
   },
   {
     icon: Truck,
-    title: 'Tài xế đến lấy hàng',
-    description: 'AI tự động tìm tài xế gần nhất và phù hợp. Theo dõi hành trình real-time qua GPS.',
+    title: 'Driver Pickup',
+    description: 'AI automatically finds the nearest suitable driver. Track journey in real-time via GPS.',
     color: 'from-green-500 to-green-600',
     iconBg: 'bg-gradient-to-br from-green-500 to-green-600',
     number: '03'
   },
   {
     icon: CheckCircle,
-    title: 'Giao hàng thành công',
-    description: 'Nhận hàng an toàn, thanh toán linh hoạt và đánh giá trải nghiệm. Hoàn thành trong vài phút.',
+    title: 'Successful Delivery',
+    description: 'Receive safely, flexible payment and rate experience. Complete in minutes.',
     color: 'from-orange-500 to-orange-600',
     iconBg: 'bg-gradient-to-br from-orange-500 to-orange-600',
     number: '04'
@@ -49,16 +49,16 @@ export function HowItWorksSection() {
           className="text-center mb-20"
         >
           <div className="inline-flex items-center px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-6">
-            ⚡ Quy trình tối ưu
+            ⚡ Optimized Process
           </div>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-heading font-bold text-foreground mb-6">
-            Giao hàng chỉ với
+            Delivery in just
             <span className="block text-primary mt-2">
-              4 bước đơn giản
+              4 simple steps
             </span>
           </h2>
           <p className="text-xl text-light-grey max-w-2xl mx-auto leading-relaxed">
-            Từ đặt hàng đến nhận hàng, mọi thứ được thiết kế để mang lại trải nghiệm mượt mà và tiện lợi nhất.
+            From ordering to receiving, everything is designed to deliver the smoothest and most convenient experience.
           </p>
         </motion.div>
 
@@ -186,11 +186,11 @@ export function HowItWorksSection() {
               </motion.div>
               
               <h3 className="text-3xl sm:text-4xl font-heading font-bold text-foreground mb-4">
-                Bắt đầu ngay hôm nay!
+                Start today!
               </h3>
               <p className="text-xl text-light-grey mb-8 max-w-2xl mx-auto leading-relaxed">
-                Hàng nghìn khách hàng đã tin tưởng FastDelivery. 
-                Tham gia cùng chúng tôi và trải nghiệm sự khác biệt.
+                Thousands of customers trust FastDelivery. 
+                Join us and experience the difference.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -199,7 +199,7 @@ export function HowItWorksSection() {
                   whileTap={{ scale: 0.95 }}
                   className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  🚀 Tạo đơn hàng ngay
+                  🚀 Create Order Now
                 </motion.button>
                 
                 <motion.button
@@ -207,7 +207,7 @@ export function HowItWorksSection() {
                   whileTap={{ scale: 0.95 }}
                   className="bg-white/80 backdrop-blur-sm text-foreground px-8 py-4 rounded-xl font-semibold text-lg border border-gray-200 hover:border-primary/50 transition-all duration-300"
                 >
-                  📱 Tải ứng dụng
+                  📱 Download App
                 </motion.button>
               </div>
               
@@ -215,15 +215,15 @@ export function HowItWorksSection() {
               <div className="flex items-center justify-center space-x-8 mt-8 text-sm text-light-grey">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>99.8% thành công</span>
+                  <span>99.8% success</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span>10K+ đơn hàng/tháng</span>
+                  <span>10K+ orders/month</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  <span>Hỗ trợ 24/7</span>
+                  <span>24/7 support</span>
                 </div>
               </div>
             </div>

@@ -5,38 +5,38 @@ import { Card } from '../ui/card';
 const benefits = [
   {
     icon: Clock,
-    title: 'Giao hàng nhanh chóng',
-    description: 'Cam kết giao hàng trong 30 phút đối với khu vực nội thành, 2-4 giờ cho các khu vực khác.',
+    title: 'Fast Delivery',
+    description: 'Guaranteed delivery within 30 minutes for city center, 2-4 hours for other areas.',
     color: 'text-primary'
   },
   {
     icon: Shield,
-    title: 'An toàn & bảo mật',
-    description: 'Hệ thống bảo hiểm toàn diện, theo dõi GPS real-time và xác thực danh tính tài xế.',
+    title: 'Safe & Secure',
+    description: 'Comprehensive insurance, real-time GPS tracking, and driver identity verification.',
     color: 'text-secondary'
   },
   {
     icon: MapPin,
-    title: 'Theo dõi real-time',
-    description: 'Theo dõi vị trí đơn hàng theo thời gian thực với bản đồ tương tác và thông báo tức thì.',
+    title: 'Real-time Tracking',
+    description: 'Track your order location in real-time with interactive maps and instant notifications.',
     color: 'text-accent'
   },
   {
     icon: Smartphone,
-    title: 'Ứng dụng thân thiện',
-    description: 'Giao diện đơn giản, dễ sử dụng trên mọi thiết bị với trải nghiệm người dùng tối ưu.',
+    title: 'User-friendly App',
+    description: 'Simple interface, easy to use on all devices with optimized user experience.',
     color: 'text-primary'
   },
   {
     icon: CreditCard,
-    title: 'Thanh toán linh hoạt',
-    description: 'Hỗ trợ đa dạng phương thức thanh toán: tiền mặt, chuyển khoản, ví điện tử.',
+    title: 'Flexible Payment',
+    description: 'Multiple payment methods supported: cash, bank transfer, e-wallet.',
     color: 'text-secondary'
   },
   {
     icon: Headphones,
-    title: 'Hỗ trợ 24/7',
-    description: 'Đội ngũ chăm sóc khách hàng chuyên nghiệp, sẵn sàng hỗ trợ mọi lúc mọi nơi.',
+    title: '24/7 Support',
+    description: 'Professional customer care team, ready to assist anytime, anywhere.',
     color: 'text-accent'
   }
 ];
@@ -53,11 +53,11 @@ export function BenefitsSection() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-bold text-foreground mb-6">
-            Tại sao chọn <span className="text-primary">FastDelivery</span>?
+            Why choose <span className="text-primary">FastDelivery</span>?
           </h2>
           <p className="text-lg text-light-grey max-w-3xl mx-auto">
-            Chúng tôi mang đến giải pháp giao hàng toàn diện với công nghệ hiện đại 
-            và dịch vụ chuyên nghiệp, đảm bảo trải nghiệm tốt nhất cho mọi khách hàng.
+            We provide comprehensive delivery solutions with modern technology 
+            and professional service, ensuring the best experience for all customers.
           </p>
         </motion.div>
 
@@ -104,28 +104,28 @@ export function BenefitsSection() {
                 <div className="text-3xl lg:text-4xl font-bold text-primary mb-2">
                   99.36%
                 </div>
-                <div className="text-light-grey">Tỷ lệ giao hàng thành công</div>
+                <div className="text-light-grey">Successful delivery rate</div>
               </div>
               
               <div>
                 <div className="text-3xl lg:text-4xl font-bold text-secondary mb-2">
-                  25 phút
+                  25 min
                 </div>
-                <div className="text-light-grey">Thời gian giao hàng trung bình</div>
+                <div className="text-light-grey">Average delivery time</div>
               </div>
               
               <div>
                 <div className="text-3xl lg:text-4xl font-bold text-accent mb-2">
                   50,000+
                 </div>
-                <div className="text-light-grey">Đơn hàng đã giao</div>
+                <div className="text-light-grey">Orders delivered</div>
               </div>
               
               <div>
                 <div className="text-3xl lg:text-4xl font-bold text-primary mb-2">
                   4.9/5
                 </div>
-                <div className="text-light-grey">Đánh giá khách hàng</div>
+                <div className="text-light-grey">Customer rating</div>
               </div>
             </div>
           </Card>
