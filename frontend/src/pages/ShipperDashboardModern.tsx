@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Package, DollarSign, Navigation, Star, Clock, MapPin, Bell, Settings, CheckCircle, Phone, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { deliveryApi, Delivery } from '../services/deliveryApi';
@@ -7,7 +6,6 @@ import { walletApi } from '../services/walletApi';
 import { Order } from '../services/orderApi';
 
 const ShipperDashboardModern: React.FC = () => {
-  const navigate = useNavigate();
   const { user, logout } = useAuth();
   
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);

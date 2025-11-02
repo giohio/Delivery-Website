@@ -613,8 +613,7 @@ export default function AdminDashboard() {
                 >
                   <option value="all">All Roles</option>
                   <option value="customer">Customer</option>
-                  <option value="driver">Driver</option>
-                  <option value="shipper">Driver</option>
+                  <option value="shipper">Shipper</option>
                   <option value="merchant">Merchant</option>
                   <option value="admin">Admin</option>
                 </select>

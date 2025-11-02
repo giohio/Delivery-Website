@@ -31,7 +31,7 @@ export class BaseCrudService {
    * Retrieves all items from the collection
    * @returns Promise<items.WixDataResult<T>> - Query result with all items
    */
-  static async getAll<T extends WixDataItem>(collectionId: string): Promise<any> {
+  static async getAll(collectionId: string): Promise<any> {
     try {
       // Mock implementation
       return { items: [], totalCount: 0 };
@@ -45,10 +45,10 @@ export class BaseCrudService {
 
   /**
    * Retrieves a single item by ID
-   * @param itemId - ID of the item to retrieve
+   * @param _itemId - ID of the item to retrieve
    * @returns Promise<T | null> - The item or null if not found
    */
-  static async getById<T extends WixDataItem>(collectionId: string, itemId: string): Promise<T | null> {
+  static async getById<T extends WixDataItem>(collectionId: string, _itemId: string): Promise<T | null> {
     try {
       // Mock implementation
       const result = { items: [] };

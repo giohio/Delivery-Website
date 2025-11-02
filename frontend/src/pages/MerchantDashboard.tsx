@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, DollarSign, Truck, Star, Users, TrendingUp, Plus, Upload, BarChart3, Download, Search, Eye, Edit, Trash2, LogOut, User } from 'lucide-react';
+import { Package, DollarSign, Truck, Star, Users, Plus, Upload, BarChart3, Download, Search, Eye, Edit, Trash2, LogOut, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Order {

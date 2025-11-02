@@ -68,7 +68,7 @@ def create_order():
     merchant_id      = data.get("merchant_id")   # optional
     distance_km      = data.get("distance_km")
     price_estimate   = data.get("price_estimate")
-    payment_method   = data.get("payment_method", "cash")
+    # payment_method is not stored in orders table, it will be stored when payment is created
 
     if not pickup_address or not delivery_address:
         return jsonify({"ok": False, "error": "pickup_address and delivery_address are required"}), 400
@@ -77,11 +77,11 @@ def create_order():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("""
         INSERT INTO app.orders
-            (customer_id, merchant_id, pickup_address, delivery_address, status, distance_km, price_estimate, payment_method)
-        VALUES (%s, %s, %s, %s, 'PENDING', %s, %s, %s)
+            (customer_id, merchant_id, pickup_address, delivery_address, status, distance_km, price_estimate)
+        VALUES (%s, %s, %s, %s, 'PENDING', %s, %s)
         RETURNING order_id, customer_id, merchant_id, pickup_address, delivery_address,
-                  status, distance_km, price_estimate, payment_method, created_at;
-    """, (session["user_id"], merchant_id, pickup_address, delivery_address, distance_km, price_estimate, payment_method))
+                  status, distance_km, price_estimate, created_at;
+    """, (session["user_id"], merchant_id, pickup_address, delivery_address, distance_km, price_estimate))
     order = cur.fetchone()
     conn.commit()
     cur.close(); conn.close()

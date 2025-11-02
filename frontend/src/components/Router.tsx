@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
 import { ScrollToTop } from '@/lib/scroll-to-top';
 import ErrorPage from '../../intergration/errorHandlers/ErrorPage';
 import HomePage from './HomePage';
+import Login from '../pages/Login';
 import CustomerDashboard from '@/components/pages/CustomerDashboard';
 import CourierDashboard from '@/components/pages/CourierDashboard';
 import MerchantDashboard from '@/components/pages/MerchantDashboard';
@@ -32,14 +33,26 @@ const router = createBrowserRouter([
         index: true,
         element: <HomePage />,
       },
+      {
+        path: "login",
+        element: <Login />,
+      },
 
       {
         path: "customer",
-        element: <CustomerDashboard />,
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerDashboard />
+          </MemberProtectedRoute>
+        ),
       },
       {
         path: "dashboard/customer",
-        element: <CustomerDashboard />,
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerDashboard />
+          </MemberProtectedRoute>
+        ),
       },
       {
         path: "dashboard/courier",

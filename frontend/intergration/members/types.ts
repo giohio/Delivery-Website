@@ -1,26 +1,25 @@
-import { members } from "@wix/members";
-
+// Mock types - replace with actual @wix/members when available
 export type Member = {
-  loginEmail?: members.GetMyMemberResponse['member']['loginEmail']; // type is string
-  loginEmailVerified?: members.GetMyMemberResponse['member']['loginEmailVerified']; // type is boolean
-  status?: members.GetMyMemberResponse['member']['status']; // type is enum of "UNKNOWN" | "PENDING" | "APPROVED" | "BLOCKED" | "OFFLINE"
+  loginEmail?: string; // type is string
+  loginEmailVerified?: boolean; // type is boolean
+  status?: "UNKNOWN" | "PENDING" | "APPROVED" | "BLOCKED" | "OFFLINE"; // type is enum of "UNKNOWN" | "PENDING" | "APPROVED" | "BLOCKED" | "OFFLINE"
   contact?: {
-    firstName?: members.GetMyMemberResponse['member']['contact']['firstName']; // type is string
-    lastName?: members.GetMyMemberResponse['member']['contact']['lastName']; // type is string
-    phones?: members.GetMyMemberResponse['member']['contact']['phones']; // type is string[]
+    firstName?: string; // type is string
+    lastName?: string; // type is string
+    phones?: string[]; // type is string[]
   },
   profile?: {
-    nickname?: members.GetMyMemberResponse['member']['profile']['nickname']; // type is string
+    nickname?: string; // type is string
     photo?: {
-      url?: members.GetMyMemberResponse['member']['profile']['photo']['url']; // type is string
-      height?: members.GetMyMemberResponse['member']['profile']['photo']['height']; // type is number
-      width?: members.GetMyMemberResponse['member']['profile']['photo']['width']; // type is number
-      offsetX?: members.GetMyMemberResponse['member']['profile']['photo']['offsetX']; // type is number
-      offsetY?: members.GetMyMemberResponse['member']['profile']['photo']['offsetY']; // type is number
+      url?: string; // type is string
+      height?: number; // type is number
+      width?: number; // type is number
+      offsetX?: number; // type is number
+      offsetY?: number; // type is number
     },
-    title?: members.GetMyMemberResponse['member']['profile']['title']; // type is string
+    title?: string; // type is string
   },
-  _createdDate?: members.GetMyMemberResponse['member']['_createdDate']; // type is Date
-  _updatedDate?: members.GetMyMemberResponse['member']['_updatedDate']; // type is Date
-  lastLoginDate?: members.GetMyMemberResponse['member']['lastLoginDate']; // type is Date
+  _createdDate?: Date; // type is Date
+  _updatedDate?: Date; // type is Date
+  lastLoginDate?: Date; // type is Date
 }

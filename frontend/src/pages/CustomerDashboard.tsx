@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Package, CheckCircle, Clock, CreditCard, Plus, Search as SearchIcon, User, LogOut, Settings, Bell, Star } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { CreateOrderModal } from '../components/customer/CreateOrderModal';
 import { PaymentModal } from '../components/customer/PaymentModal';
 import { RatingModal } from '../components/customer/RatingModal';
+import { orderApi } from '../services/orderApi';
+import { notificationApi } from '../services/notificationApi';
 
 interface OrderStats {
   totalOrders: number;
@@ -14,13 +16,21 @@ interface OrderStats {
 }
 
 interface Order {
-  id: string;
-  date: string;
-  from: string;
-  to: string;
-  items: string;
-  price: number;
-  status: 'completed' | 'pending' | 'waiting';
+  order_id: number;
+  created_at: string;
+  pickup_address: string;
+  delivery_address: string;
+  price_estimate: number;
+  status: string;
+  delivery_id?: number;
+}
+
+interface Notification {
+  notification_id: number;
+  title: string;
+  body: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 const CustomerDashboard: React.FC = () => {
@@ -39,65 +49,64 @@ const CustomerDashboard: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  const notifications = [
-    { id: 1, title: 'Order in transit', message: 'Order #FD2024001235 arriving soon', time: '5 minutes ago', unread: true },
-    { id: 2, title: 'New promotion', message: '20% off your next order', time: '1 hour ago', unread: true },
-    { id: 3, title: 'Delivery completed', message: 'Order #FD2024001234 completed', time: '2 hours ago', unread: false },
-  ];
-  const [stats] = useState<OrderStats>({
-    totalOrders: 3,
-    completedOrders: 1,
-    pendingOrders: 2,
-    totalSpent: 65000
-  });
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Calculate stats from orders
+  const stats: OrderStats = {
+    totalOrders: orders.length,
+    completedOrders: orders.filter(o => o.status === 'COMPLETED').length,
+    pendingOrders: orders.filter(o => o.status === 'PENDING').length,
+    totalSpent: orders.reduce((sum, o) => sum + (o.price_estimate || 0), 0)
+  };
 
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: 'FD2024001234',
-      date: '15/1/2024',
-      from: 'Shop ABC - 123 Nguyễn Huệ, Q1',
-      to: '456 Lê Lợi, Q3, TP.HCM',
-      items: 'Quần áo thời trang (2 món)',
-      price: 25000,
-      status: 'completed'
-    },
-    {
-      id: 'FD2024001235',
-      date: '16/1/2024',
-      from: 'Nhà hàng XYZ - 789 Trần Hưng Đạo, Q1',
-      to: '321 Võ Văn Tần, Q3, TP.HCM',
-      items: 'Đồ ăn nhanh',
-      price: 18000,
-      status: 'pending'
-    },
-    {
-      id: 'FD2024001236',
-      date: '16/1/2024',
-      from: 'Siêu thị DEF - 555 Hai Bà Trưng, Q1',
-      to: '789 Cách Mạng Tháng 8, Q10, TP.HCM',
-      items: 'Thực phẩm tươi sống',
-      price: 22000,
-      status: 'waiting'
+  // Load data from database
+  useEffect(() => {
+    loadOrders();
+    loadNotifications();
+  }, []);
+
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await orderApi.getMyOrders();
+      setOrders(response.orders || []);
+    } catch (err) {
+      console.error('Failed to load orders:', err);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const response = await notificationApi.getNotifications();
+      setNotifications(response.notifications || []);
+    } catch (err) {
+      console.error('Failed to load notifications:', err);
+    }
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.to.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || order.status === filterStatus;
+    const matchesSearch = order.order_id.toString().includes(searchTerm.toLowerCase()) ||
+                         order.pickup_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.delivery_address.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || order.status.toLowerCase() === filterStatus.toLowerCase();
     return matchesSearch && matchesFilter;
   });
 
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-blue-100 text-blue-800';
-      case 'waiting': return 'bg-yellow-100 text-yellow-800';
+    switch (status.toUpperCase()) {
+      case 'COMPLETED': return 'bg-green-100 text-green-800';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'ASSIGNED': return 'bg-blue-100 text-blue-800';
+      case 'ONGOING': return 'bg-purple-100 text-purple-800';
+      case 'CANCELED': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -134,7 +143,7 @@ const CustomerDashboard: React.FC = () => {
                   className="p-2 text-gray-400 hover:text-gray-600 relative"
                 >
                   <Bell className="w-6 h-6" />
-                  {notifications.filter(n => n.unread).length > 0 && (
+                  {notifications.filter(n => !n.is_read).length > 0 && (
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                   )}
                 </button>
@@ -146,13 +155,21 @@ const CustomerDashboard: React.FC = () => {
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       {notifications.map(notif => (
-                        <div key={notif.id} className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${notif.unread ? 'bg-blue-50' : ''}`}>
+                        <div key={notif.notification_id} className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${!notif.is_read ? 'bg-blue-50' : ''}`}
+                          onClick={async () => {
+                            try {
+                              await notificationApi.markAsRead(notif.notification_id);
+                              loadNotifications();
+                            } catch (err) {
+                              console.error('Failed to mark as read:', err);
+                            }
+                          }}>
                           <div className="flex justify-between items-start mb-1">
                             <p className="font-medium text-sm">{notif.title}</p>
-                            {notif.unread && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
+                            {!notif.is_read && <span className="w-2 h-2 bg-blue-600 rounded-full"></span>}
                           </div>
-                          <p className="text-sm text-gray-600">{notif.message}</p>
-                          <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
+                          <p className="text-sm text-gray-600">{notif.body}</p>
+                          <p className="text-xs text-gray-400 mt-1">{new Date(notif.created_at).toLocaleString('vi-VN')}</p>
                         </div>
                       ))}
                     </div>
@@ -337,22 +354,27 @@ const CustomerDashboard: React.FC = () => {
           </div>
 
           <div className="divide-y">
-            {filteredOrders.length === 0 ? (
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading orders...</p>
+              </div>
+            ) : filteredOrders.length === 0 ? (
               <div className="p-8 text-center">
                 <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-600">No orders found</p>
               </div>
             ) : (
               filteredOrders.map((order) => (
-              <div key={order.id} className="p-6">
+              <div key={order.order_id} className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-4 mb-3">
                       <div className="flex items-center">
                         <Package className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="font-semibold text-gray-900">#{order.id}</span>
+                        <span className="font-semibold text-gray-900">#FD{order.order_id}</span>
                       </div>
-                      <span className="text-sm text-gray-500">{order.date}</span>
+                      <span className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString('vi-VN')}</span>
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
                         {getStatusText(order.status)}
                       </span>
@@ -360,20 +382,17 @@ const CustomerDashboard: React.FC = () => {
                     
                     <div className="space-y-2 text-sm text-gray-600">
                       <div>
-                        <span className="font-medium">From:</span> {order.from}
+                        <span className="font-medium">From:</span> {order.pickup_address}
                       </div>
                       <div>
-                        <span className="font-medium">To:</span> {order.to}
-                      </div>
-                      <div>
-                        <span className="font-medium">Items:</span> {order.items}
+                        <span className="font-medium">To:</span> {order.delivery_address}
                       </div>
                     </div>
                   </div>
                   
                   <div className="text-right">
                     <div className="text-lg font-bold text-gray-900 mb-2">
-                      {order.price.toLocaleString()} VND
+                      {(order.price_estimate || 0).toLocaleString()} ₫
                     </div>
                     <div className="space-x-2 flex flex-wrap gap-2">
                       <button 
@@ -387,23 +406,37 @@ const CustomerDashboard: React.FC = () => {
                       </button>
                       
                       {/* Pay Button - Show for all orders, disable if already paid */}
-                      <button 
-                        onClick={() => {
-                          if (order.status !== 'completed') {
+                      {order.status === 'PENDING' && (
+                        <button 
+                          onClick={() => {
                             setSelectedOrderForPayment(order);
                             setShowPaymentModal(true);
-                          }
-                        }}
-                        disabled={order.status === 'completed'}
-                        className={`px-3 py-1 rounded text-sm font-medium inline-flex items-center space-x-1 ${
-                          order.status === 'completed'
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-green-600 hover:bg-green-700 text-white'
-                        }`}
-                      >
-                        <CreditCard className="w-3 h-3" />
-                        <span>Pay</span>
-                      </button>
+                          }}
+                          className="px-3 py-1 rounded text-sm font-medium inline-flex items-center space-x-1 bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <CreditCard className="w-3 h-3" />
+                          <span>Pay</span>
+                        </button>
+                      )}
+                      
+                      {order.status === 'PENDING' && (
+                        <button 
+                          onClick={async () => {
+                            if (confirm('Are you sure you want to cancel this order?')) {
+                              try {
+                                await orderApi.cancelOrder(order.order_id);
+                                loadOrders();
+                                alert('Order cancelled successfully');
+                              } catch (err: any) {
+                                alert(err.response?.data?.error || 'Failed to cancel order');
+                              }
+                            }
+                          }}
+                          className="px-3 py-1 rounded text-sm font-medium inline-flex items-center space-x-1 bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          <span>Cancel</span>
+                        </button>
+                      )}
                       
                       {/* Track Button - Show for all orders */}
                       <button 
@@ -417,23 +450,18 @@ const CustomerDashboard: React.FC = () => {
                       </button>
                       
                       {/* Rate Button - Show for all orders, disable if not completed */}
-                      <button 
-                        onClick={() => {
-                          if (order.status === 'completed') {
-                            setSelectedDeliveryForRating(order.id);
+                      {order.status === 'COMPLETED' && order.delivery_id && (
+                        <button 
+                          onClick={() => {
+                            setSelectedDeliveryForRating(order.delivery_id!.toString());
                             setShowRatingModal(true);
-                          }
-                        }}
-                        disabled={order.status !== 'completed'}
-                        className={`px-3 py-1 rounded text-sm font-medium inline-flex items-center space-x-1 ${
-                          order.status !== 'completed'
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                        }`}
-                      >
-                        <Star className="w-3 h-3" />
-                        <span>Rate</span>
-                      </button>
+                          }}
+                          className="px-3 py-1 rounded text-sm font-medium inline-flex items-center space-x-1 bg-yellow-500 hover:bg-yellow-600 text-white"
+                        >
+                          <Star className="w-3 h-3" />
+                          <span>Rate</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -448,38 +476,9 @@ const CustomerDashboard: React.FC = () => {
       {showCreateOrderModal && (
         <CreateOrderModal
           onClose={() => setShowCreateOrderModal(false)}
-          onSuccess={(orderData) => {
-            // Order created successfully via API
-            // Add to local state for immediate display (with real backend data if available)
-            if (orderData?.createdOrder) {
-              // Use real order data from backend
-              const backendOrder = orderData.createdOrder;
-              const newOrder: Order = {
-                id: `FD${backendOrder.order_id}`,
-                date: new Date(backendOrder.created_at).toLocaleDateString('vi-VN'),
-                from: backendOrder.pickup_address,
-                to: backendOrder.delivery_address,
-                items: `Distance: ${backendOrder.distance_km || 0} km`,
-                price: backendOrder.price_estimate || 0,
-                status: 'pending'
-              };
-              setOrders([newOrder, ...orders]);
-              alert(`Order created successfully! Order #${backendOrder.order_id}`);
-            } else {
-              // Fallback to form data if backend response not available
-              const newOrderId = `FD${orderData?.orderId || Date.now()}`;
-              const newOrder: Order = {
-                id: newOrderId,
-                date: new Date().toLocaleDateString('vi-VN'),
-                from: orderData?.pickup_address || 'Pickup location',
-                to: orderData?.delivery_address || 'Delivery location',
-                items: `Distance: ${orderData?.distance_km || 0} km`,
-                price: orderData?.price_estimate || 0,
-                status: 'pending'
-              };
-              setOrders([newOrder, ...orders]);
-              alert(`Order created successfully! Order #${newOrderId}`);
-            }
+          onSuccess={() => {
+            loadOrders();
+            alert('Order created successfully!');
           }}
         />
       )}
@@ -487,13 +486,14 @@ const CustomerDashboard: React.FC = () => {
       {/* Payment Modal */}
       {showPaymentModal && selectedOrderForPayment && (
         <PaymentModal
-          orderId={parseInt(selectedOrderForPayment.id.replace('FD', ''))} 
-          amount={selectedOrderForPayment.price}
+          orderId={selectedOrderForPayment.order_id} 
+          amount={selectedOrderForPayment.price_estimate || 0}
           onClose={() => {
             setShowPaymentModal(false);
             setSelectedOrderForPayment(null);
           }}
           onSuccess={() => {
+            loadOrders();
             alert('Payment processed successfully!');
           }}
         />
@@ -502,13 +502,13 @@ const CustomerDashboard: React.FC = () => {
       {/* Rating Modal */}
       {showRatingModal && selectedDeliveryForRating && (
         <RatingModal
-          deliveryId={1} // Using demo delivery ID for mock data
+          deliveryId={parseInt(selectedDeliveryForRating)}
           onClose={() => {
             setShowRatingModal(false);
             setSelectedDeliveryForRating(null);
           }}
           onSuccess={() => {
-            // Modal already shows success alert
+            alert('Thank you for your feedback!');
             setShowRatingModal(false);
             setSelectedDeliveryForRating(null);
           }}
@@ -519,13 +519,12 @@ const CustomerDashboard: React.FC = () => {
       {showOrderDetailModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Order Details</h3>
+            <h3 className="text-xl font-bold mb-4">Order Details #FD{selectedOrder.order_id}</h3>
             <div className="space-y-3">
-              <div><strong>Date:</strong> {selectedOrder.date}</div>
-              <div><strong>From:</strong> {selectedOrder.from}</div>
-              <div><strong>To:</strong> {selectedOrder.to}</div>
-              <div><strong>Items:</strong> {selectedOrder.items}</div>
-              <div><strong>Price:</strong> {selectedOrder.price.toLocaleString()} VND</div>
+              <div><strong>Date:</strong> {new Date(selectedOrder.created_at).toLocaleString('vi-VN')}</div>
+              <div><strong>From:</strong> {selectedOrder.pickup_address}</div>
+              <div><strong>To:</strong> {selectedOrder.delivery_address}</div>
+              <div><strong>Price:</strong> {(selectedOrder.price_estimate || 0).toLocaleString()} ₫</div>
               <div><strong>Status:</strong> <span className={`px-2 py-1 rounded ${getStatusColor(selectedOrder.status)}`}>{getStatusText(selectedOrder.status)}</span></div>
             </div>
             <button onClick={() => setShowOrderDetailModal(false)} className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Close</button>
@@ -574,7 +573,7 @@ const CustomerDashboard: React.FC = () => {
                 <div className="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
                 <div>
                   <p className="font-medium">Order Created</p>
-                  <p className="text-sm text-gray-500">{selectedOrder.date}</p>
+                  <p className="text-sm text-gray-500">{new Date(selectedOrder.created_at).toLocaleString('vi-VN')}</p>
                 </div>
               </div>
               <div className="flex items-start space-x-3">

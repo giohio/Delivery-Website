@@ -37,7 +37,10 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ onClose, onS
     setError('');
 
     try {
+      console.log('Creating order with data:', formData);
       const response = await orderApi.createOrder(formData);
+      console.log('Order created successfully:', response);
+      
       // Pass the created order data back to parent
       onSuccess({
         ...formData,
@@ -46,7 +49,20 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ onClose, onS
       });
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to create order');
+      console.error('Failed to create order:', err);
+      console.error('Error response:', err.response);
+      
+      let errorMessage = 'Failed to create order';
+      
+      if (err.code === 'ERR_NETWORK') {
+        errorMessage = 'Cannot connect to server. Please make sure backend is running at http://localhost:5000';
+      } else if (err.response?.status === 401) {
+        errorMessage = 'You are not logged in. Please login first.';
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
