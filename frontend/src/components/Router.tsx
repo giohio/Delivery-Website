@@ -5,10 +5,9 @@ import ErrorPage from '../../intergration/errorHandlers/ErrorPage';
 import HomePage from './HomePage';
 import Login from '../pages/Login';
 import CustomerDashboard from '@/components/pages/CustomerDashboard';
-import CourierDashboard from '@/components/pages/CourierDashboard';
-import MerchantDashboard from '@/components/pages/MerchantDashboard';
-import AdminDashboard from '@/components/pages/AdminDashboard';
 import ShipperDashboard from '../pages/ShipperDashboardModern';
+import MerchantDashboard from '../pages/MerchantDashboardNew';
+import AdminDashboard from '@/components/pages/AdminDashboard';
 
 import { MemberProtectedRoute } from '@/components/ui/member-protected-route';
 
@@ -58,17 +57,41 @@ const router = createBrowserRouter([
         path: "dashboard/courier",
         element: (
           <MemberProtectedRoute messageToSignIn="Đăng nhập để truy cập bảng điều khiển tài xế">
-            <CourierDashboard />
+            <ShipperDashboard />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "courier",
+        element: (
+          <MemberProtectedRoute messageToSignIn="Đăng nhập để truy cập bảng điều khiển tài xế">
+            <ShipperDashboard />
           </MemberProtectedRoute>
         ),
       },
       {
         path: "shipper",
-        element: <ShipperDashboard />,
+        element: (
+          <MemberProtectedRoute messageToSignIn="Đăng nhập để truy cập bảng điều khiển shipper">
+            <ShipperDashboard />
+          </MemberProtectedRoute>
+        ),
       },
       {
         path: "dashboard/shipper",
-        element: <ShipperDashboard />,
+        element: (
+          <MemberProtectedRoute messageToSignIn="Đăng nhập để truy cập bảng điều khiển shipper">
+            <ShipperDashboard />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "merchant",
+        element: (
+          <MemberProtectedRoute messageToSignIn="Đăng nhập để truy cập bảng điều khiển merchant">
+            <MerchantDashboard />
+          </MemberProtectedRoute>
+        ),
       },
       {
         path: "dashboard/merchant",

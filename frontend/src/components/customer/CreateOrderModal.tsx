@@ -57,7 +57,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({ onClose, onS
       if (err.code === 'ERR_NETWORK') {
         errorMessage = 'Cannot connect to server. Please make sure backend is running at http://localhost:5000';
       } else if (err.response?.status === 401) {
-        errorMessage = 'You are not logged in. Please login first.';
+        errorMessage = 'Authentication failed. Please logout and login again.';
       } else if (err.response?.data?.error) {
         errorMessage = err.response.data.error;
       }

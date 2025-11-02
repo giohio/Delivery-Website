@@ -1,8 +1,8 @@
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
-import CustomerDashboard from './pages/CustomerDashboard';
-import CourierDashboard from './pages/CourierDashboard';
-import MerchantDashboard from './pages/MerchantDashboard';
+import CustomerDashboard from './components/pages/CustomerDashboard';
+import ShipperDashboard from './pages/ShipperDashboardModern';
+import MerchantDashboard from './pages/MerchantDashboardNew';
 import AdminDashboard from './components/pages/AdminDashboard';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
@@ -23,7 +23,12 @@ export default function App() {
       } />
       <Route path="/courier" element={
         <MemberProtectedRoute allowedRoles={['shipper', 'courier']}>
-          <CourierDashboard />
+          <ShipperDashboard />
+        </MemberProtectedRoute>
+      } />
+      <Route path="/shipper" element={
+        <MemberProtectedRoute allowedRoles={['shipper', 'courier']}>
+          <ShipperDashboard />
         </MemberProtectedRoute>
       } />
       <Route path="/merchant" element={

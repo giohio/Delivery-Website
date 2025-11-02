@@ -175,8 +175,8 @@ def cancel_order(order_id):
 
     conn.commit()
     try:
-        push_notification(order["customer_id"], "Order Created",
-                                f"Your order #{order['order_id']} is created.")
+        push_notification(order["customer_id"], "Order Canceled",
+                                f"Your order #{order['order_id']} has been canceled.")
     except Exception as e:
         print("Notification error:", e)
     cur.close(); conn.close()

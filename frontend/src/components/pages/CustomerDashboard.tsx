@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Package, CheckCircle, Clock, CreditCard, Plus, Search as SearchIcon, User, LogOut, Settings, Bell, Star } from 'lucide-react';
+import { Search, Package, CheckCircle, Clock, CreditCard, Plus, Search as SearchIcon, User, LogOut, Settings, Bell, Star, MapPin, Truck, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { CreateOrderModal } from '../customer/CreateOrderModal';
 import { PaymentModal } from '../customer/PaymentModal';
@@ -42,8 +42,10 @@ export default function CustomerDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedOrderForPayment, setSelectedOrderForPayment] = useState<Order | null>(null);
+  const [selectedOrderForTracking, setSelectedOrderForTracking] = useState<Order | null>(null);
   const [selectedDeliveryForRating, setSelectedDeliveryForRating] = useState<string | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -57,19 +59,43 @@ export default function CustomerDashboard() {
     totalOrders: orders.length,
     completedOrders: orders.filter(o => o.status === 'COMPLETED').length,
     pendingOrders: orders.filter(o => o.status === 'PENDING').length,
-    totalSpent: orders.reduce((sum, o) => sum + parseFloat(String(o.price_estimate || 0)), 0)
+    totalSpent: orders.reduce((sum, o) => Number(sum) + Number(o.price_estimate || 0), 0)
   };
 
   // Load data from database
   useEffect(() => {
     loadOrders();
     loadNotifications();
+    
+    // Auto refresh every 30 seconds to see status updates
+    const interval = setInterval(() => {
+      loadOrders();
+      loadNotifications();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const loadOrders = async () => {
     try {
       setLoading(true);
+      console.log('Loading orders...');
       const response = await orderApi.getMyOrders();
+      console.log('Orders loaded:', response.orders);
+      
+      // Debug: Log each order's status and expected buttons
+      if (response.orders) {
+        response.orders.forEach((order: any) => {
+          const status = order.status?.toUpperCase();
+          console.log(`Order #FD${order.order_id.toString().padStart(2, '0')}:`, {
+            status: status,
+            shouldShowTrack: status === 'ASSIGNED' || status === 'ONGOING',
+            shouldShowPay: status === 'PENDING',
+            shouldShowRate: status === 'COMPLETED' && order.delivery_id
+          });
+        });
+      }
+      
       setOrders(response.orders || []);
     } catch (err) {
       console.error('Failed to load orders:', err);
@@ -320,7 +346,19 @@ export default function CustomerDashboard() {
         <div className="bg-white rounded-lg shadow-sm border">
           <div className="p-6 border-b">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-              <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
+              <div className="flex items-center space-x-3">
+                <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
+                <button
+                  onClick={() => {
+                    console.log('Refreshing orders...');
+                    loadOrders();
+                  }}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  title="Refresh orders"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
               
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <div className="relative">
@@ -363,14 +401,16 @@ export default function CustomerDashboard() {
                 <p className="text-gray-600">No orders found</p>
               </div>
             ) : (
-              filteredOrders.map((order) => (
+              filteredOrders.map((order) => {
+                console.log(`Order #FD${order.order_id.toString().padStart(2, '0')} status:`, order.status);
+                return (
               <div key={order.order_id} className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-4 mb-3">
                       <div className="flex items-center">
                         <Package className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="font-semibold text-gray-900">#FD{order.order_id}</span>
+                        <span className="font-semibold text-gray-900">#FD{order.order_id.toString().padStart(2, '0')}</span> {/* Updated format */}
                       </div>
                       <span className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString('vi-VN')}</span>
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
@@ -390,7 +430,7 @@ export default function CustomerDashboard() {
                   
                   <div className="text-right">
                     <div className="text-lg font-bold text-gray-900 mb-2">
-                      {parseFloat(String(order.price_estimate || 0)).toLocaleString('vi-VN')} ₫
+                      {Number(order.price_estimate || 0).toLocaleString('vi-VN')} ₫
                     </div>
                     <div className="space-x-2 flex flex-wrap gap-2 justify-end">
                       <button 
@@ -403,7 +443,22 @@ export default function CustomerDashboard() {
                         Details
                       </button>
                       
-                      {order.status === 'PENDING' && (
+                      {/* Track button for ASSIGNED and ONGOING orders */}
+                      {(order.status?.toUpperCase() === 'ASSIGNED' || order.status?.toUpperCase() === 'ONGOING') && (
+                        <button 
+                          onClick={() => {
+                            setSelectedOrderForTracking(order);
+                            setShowTrackingModal(true);
+                          }}
+                          className="px-3 py-1 rounded text-sm font-medium inline-flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          <MapPin className="w-3 h-3" />
+                          <span>Track</span>
+                        </button>
+                      )}
+                      
+                      {/* Pay and Cancel buttons for PENDING orders */}
+                      {order.status?.toUpperCase() === 'PENDING' && (
                         <>
                           <button 
                             onClick={() => {
@@ -435,7 +490,8 @@ export default function CustomerDashboard() {
                         </>
                       )}
                       
-                      {order.status === 'COMPLETED' && order.delivery_id && (
+                      {/* Rate button for COMPLETED orders */}
+                      {order.status?.toUpperCase() === 'COMPLETED' && order.delivery_id && (
                         <button 
                           onClick={() => {
                             setSelectedDeliveryForRating(order.delivery_id!.toString());
@@ -451,7 +507,8 @@ export default function CustomerDashboard() {
                   </div>
                 </div>
               </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -504,12 +561,12 @@ export default function CustomerDashboard() {
       {showOrderDetailModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Order Details #FD{selectedOrder.order_id}</h3>
+            <h3 className="text-xl font-bold mb-4">Order Details #FD{selectedOrder.order_id.toString().padStart(2, '0')}</h3> {/* Updated format */}
             <div className="space-y-3">
               <div><strong>Date:</strong> {new Date(selectedOrder.created_at).toLocaleString('vi-VN')}</div>
               <div><strong>From:</strong> {selectedOrder.pickup_address}</div>
               <div><strong>To:</strong> {selectedOrder.delivery_address}</div>
-              <div><strong>Price:</strong> {parseFloat(String(selectedOrder.price_estimate || 0)).toLocaleString('vi-VN')} ₫</div>
+              <div><strong>Price:</strong> {Number(selectedOrder.price_estimate || 0).toLocaleString('vi-VN')} ₫</div>
               <div><strong>Status:</strong> <span className={`px-2 py-1 rounded ${getStatusColor(selectedOrder.status)}`}>{getStatusText(selectedOrder.status)}</span></div>
             </div>
             <button onClick={() => setShowOrderDetailModal(false)} className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Close</button>
@@ -568,6 +625,162 @@ export default function CustomerDashboard() {
             <div className="flex space-x-3 mt-6">
               <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Close</button>
               <button onClick={() => { alert('Settings saved!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTrackingModal && selectedOrderForTracking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">Track Order #FD{selectedOrderForTracking.order_id.toString().padStart(2, '0')}</h3> {/* Updated format */}
+              <button 
+                onClick={() => {
+                  setShowTrackingModal(false);
+                  setSelectedOrderForTracking(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Order Status */}
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Truck className="w-6 h-6 text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {selectedOrderForTracking.status === 'ASSIGNED' ? 'Driver Assigned' : 'Out for Delivery'}
+                    </p>
+                    <p className="text-sm text-gray-600">Your order is on the way</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Estimated Time</p>
+                  <p className="font-bold text-blue-600">15-30 mins</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Details */}
+            <div className="space-y-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">From</p>
+                  <p className="text-gray-900">{selectedOrderForTracking.pickup_address}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">To</p>
+                  <p className="text-gray-900">{selectedOrderForTracking.delivery_address}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Order Value</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {Number(selectedOrderForTracking.price_estimate || 0).toLocaleString('vi-VN')} ₫
+                </p>
+              </div>
+            </div>
+
+            {/* Delivery Timeline */}
+            <div className="space-y-4">
+              <h4 className="font-bold text-gray-900 flex items-center">
+                <Clock className="w-5 h-5 mr-2" />
+                Delivery Progress
+              </h4>
+              
+              <div className="space-y-4">
+                <div className="flex items-start space-x-4">
+                  <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <p className="font-semibold text-gray-900">Order Confirmed</p>
+                      <span className="text-sm text-gray-600">{new Date(selectedOrderForTracking.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</span>
+                    </div>
+                    <p className="text-sm text-gray-600">Your order has been confirmed and is being prepared</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4 border-l-2 border-gray-200 ml-3 pl-7">
+                  <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center flex-shrink-0 -ml-7">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <p className="font-semibold text-gray-900">Driver Assigned</p>
+                      <span className="text-sm text-gray-600">
+                        {new Date(new Date(selectedOrderForTracking.created_at).getTime() + 10*60000).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">Driver is on the way to pickup location</p>
+                  </div>
+                </div>
+
+                {selectedOrderForTracking.status === 'ONGOING' && (
+                  <div className="flex items-start space-x-4 border-l-2 border-gray-200 ml-3 pl-7">
+                    <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center flex-shrink-0 -ml-7">
+                      <Truck className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
+                        <p className="font-semibold text-gray-900">Out for Delivery</p>
+                        <span className="text-sm text-gray-600">
+                          {new Date(new Date(selectedOrderForTracking.created_at).getTime() + 20*60000).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600">Package is on the way to delivery address</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-start space-x-4 border-l-2 border-gray-200 ml-3 pl-7">
+                  <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center flex-shrink-0 -ml-7">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <p className="font-semibold text-gray-400">Delivered</p>
+                      <span className="text-sm text-gray-400">Pending</span>
+                    </div>
+                    <p className="text-sm text-gray-400">Package will be delivered soon</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Driver Contact */}
+            <div className="mt-6 bg-gray-50 rounded-lg p-4">
+              <h4 className="font-bold text-gray-900 mb-3 flex items-center">
+                <User className="w-5 h-5 mr-2" />
+                Driver Information
+              </h4>
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-gray-900">Driver Name</p>
+                  <p className="text-sm text-gray-600">Honda Wave - 29A1-12345</p>
+                </div>
+                <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                  <span>📞</span>
+                  <span>Call Driver</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button 
+                onClick={() => {
+                  setShowTrackingModal(false);
+                  setSelectedOrderForTracking(null);
+                }}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

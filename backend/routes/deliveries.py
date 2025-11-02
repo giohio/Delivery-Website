@@ -50,8 +50,12 @@ def available_orders():
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    # Get all orders, not just PENDING - shipper can see all orders like customer
-    cur.execute("SELECT * FROM app.orders ORDER BY created_at DESC;")
+    # Get only PENDING orders that shippers can accept
+    cur.execute("""
+        SELECT * FROM app.orders 
+        WHERE status = 'PENDING' AND delivery_id IS NULL
+        ORDER BY created_at DESC;
+    """)
     rows = cur.fetchall()
     cur.close(); conn.close()
 
