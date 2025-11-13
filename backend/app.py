@@ -12,7 +12,9 @@ from routes.wallets import wallets_bp
 from routes.ratings import ratings_bp
 from routes.notifications import notifications_bp
 from routes.merchant import merchant_bp
-from routes.admin import admin_bp  
+from routes.admin import admin_bp
+from routes.user import user_bp
+from routes.courier import courier_bp
 from routes import register_routes
 
 load_dotenv(override=True)
@@ -27,7 +29,9 @@ app.register_blueprint(wallets_bp)
 app.register_blueprint(ratings_bp)
 app.register_blueprint(notifications_bp)
 app.register_blueprint(merchant_bp)
-app.register_blueprint(admin_bp)  
+app.register_blueprint(admin_bp)
+app.register_blueprint(user_bp)
+app.register_blueprint(courier_bp)  
 
 # Register health and db check routes
 register_routes(app)

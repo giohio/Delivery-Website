@@ -5,8 +5,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { CreateOrderModal } from '../customer/CreateOrderModal';
 import { PaymentModal } from '../customer/PaymentModal';
 import { RatingModal } from '../customer/RatingModal';
+import { ProfileModal } from '../customer/ProfileModal';
+import { ChangePasswordModal } from '../customer/ChangePasswordModal';
 import { orderApi } from '../../services/orderApi';
 import { notificationApi } from '../../services/notificationApi';
+import { ratingApi } from '../../services/ratingApi';
 
 interface OrderStats {
   totalOrders: number;
@@ -53,6 +56,7 @@ export default function CustomerDashboard() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ratedDeliveries, setRatedDeliveries] = useState<Set<number>>(new Set());
   
   // Calculate stats from orders
   const stats: OrderStats = {
@@ -83,6 +87,26 @@ export default function CustomerDashboard() {
       const response = await orderApi.getMyOrders();
       console.log('Orders loaded:', response.orders);
       
+      // Load rated deliveries
+      const completedOrders = response.orders?.filter((o: any) => 
+        o.status?.toUpperCase() === 'COMPLETED' && o.delivery_id
+      ) || [];
+      
+      const ratedSet = new Set<number>();
+      for (const order of completedOrders) {
+        try {
+          await ratingApi.getDeliveryRating(order.delivery_id);
+          // If no error, rating exists
+          ratedSet.add(order.delivery_id);
+        } catch (err: any) {
+          // 404 means no rating yet
+          if (err.response?.status === 404) {
+            console.log(`No rating for delivery ${order.delivery_id}`);
+          }
+        }
+      }
+      setRatedDeliveries(ratedSet);
+      
       // Debug: Log each order's status and expected buttons
       if (response.orders) {
         response.orders.forEach((order: any) => {
@@ -91,7 +115,7 @@ export default function CustomerDashboard() {
             status: status,
             shouldShowTrack: status === 'ASSIGNED' || status === 'ONGOING',
             shouldShowPay: status === 'PENDING',
-            shouldShowRate: status === 'COMPLETED' && order.delivery_id
+            shouldShowRate: status === 'COMPLETED' && order.delivery_id && !ratedSet.has(order.delivery_id)
           });
         });
       }
@@ -404,26 +428,34 @@ export default function CustomerDashboard() {
               filteredOrders.map((order) => {
                 console.log(`Order #FD${order.order_id.toString().padStart(2, '0')} status:`, order.status);
                 return (
-              <div key={order.order_id} className="p-6">
+              <div key={order.order_id} className="p-6 border-b last:border-b-0 hover:bg-gray-50 transition">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-4 mb-3">
                       <div className="flex items-center">
                         <Package className="w-5 h-5 text-blue-600 mr-2" />
-                        <span className="font-semibold text-gray-900">#FD{order.order_id.toString().padStart(2, '0')}</span> {/* Updated format */}
+                        <span className="font-semibold text-gray-900">#FD{order.order_id.toString().padStart(2, '0')}</span>
                       </div>
-                      <span className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString('vi-VN')}</span>
+                      <span className="text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString('vi-VN')} {new Date(order.created_at).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'})}</span>
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
                         {getStatusText(order.status)}
                       </span>
                     </div>
                     
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <div>
-                        <span className="font-medium">From:</span> {order.pickup_address}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <span className="font-medium text-gray-600">Pickup:</span>
+                          <p className="text-gray-900">{order.pickup_address}</p>
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-medium">To:</span> {order.delivery_address}
+                      <div className="flex items-start space-x-2">
+                        <MapPin className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <span className="font-medium text-gray-600">Deliver:</span>
+                          <p className="text-gray-900">{order.delivery_address}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -490,8 +522,8 @@ export default function CustomerDashboard() {
                         </>
                       )}
                       
-                      {/* Rate button for COMPLETED orders */}
-                      {order.status?.toUpperCase() === 'COMPLETED' && order.delivery_id && (
+                      {/* Rate button for COMPLETED orders - only show if not rated yet */}
+                      {order.status?.toUpperCase() === 'COMPLETED' && order.delivery_id && !ratedDeliveries.has(order.delivery_id) && (
                         <button 
                           onClick={() => {
                             setSelectedDeliveryForRating(order.delivery_id!.toString());
@@ -502,6 +534,14 @@ export default function CustomerDashboard() {
                           <Star className="w-3 h-3" />
                           <span>Rate</span>
                         </button>
+                      )}
+                      
+                      {/* Show "Rated" badge if already rated */}
+                      {order.status?.toUpperCase() === 'COMPLETED' && order.delivery_id && ratedDeliveries.has(order.delivery_id) && (
+                        <div className="px-3 py-1 rounded text-sm font-medium inline-flex items-center space-x-1 bg-green-100 text-green-700">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Rated</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -551,9 +591,9 @@ export default function CustomerDashboard() {
             setSelectedDeliveryForRating(null);
           }}
           onSuccess={() => {
-            alert('Thank you for your feedback!');
             setShowRatingModal(false);
             setSelectedDeliveryForRating(null);
+            loadOrders(); // Reload orders after rating
           }}
         />
       )}
@@ -575,59 +615,24 @@ export default function CustomerDashboard() {
       )}
 
       {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Update Profile</h3>
-            <form className="space-y-4" onSubmit={(e) => {
-              e.preventDefault();
-              setShowProfileModal(false);
-              alert('Profile updated!');
-            }}>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                <input type="text" defaultValue={user?.fullName} className="w-full border rounded px-3 py-2" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input type="email" defaultValue={user?.email} className="w-full border rounded px-3 py-2" disabled />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                <input type="tel" defaultValue={user?.phone} className="w-full border rounded px-3 py-2" placeholder="Enter phone number" />
-              </div>
-              <div className="flex space-x-3">
-                <button type="button" onClick={() => setShowProfileModal(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <ProfileModal 
+          onClose={() => setShowProfileModal(false)}
+          onSuccess={() => {
+            loadOrders();
+            // Reload user data if needed
+          }}
+        />
       )}
 
       {showSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Settings</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium">Order Notifications</span>
-                  <input type="checkbox" defaultChecked className="w-4 h-4" />
-                </label>
-              </div>
-              <div>
-                <label className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium">Receive Promotions</span>
-                  <input type="checkbox" defaultChecked className="w-4 h-4" />
-                </label>
-              </div>
-            </div>
-            <div className="flex space-x-3 mt-6">
-              <button onClick={() => setShowSettings(false)} className="flex-1 px-4 py-2 border rounded hover:bg-gray-50">Close</button>
-              <button onClick={() => { alert('Settings saved!'); setShowSettings(false); }} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
-            </div>
-          </div>
-        </div>
+        <ChangePasswordModal 
+          onClose={() => setShowSettings(false)}
+          onSuccess={() => {
+            // Will logout after password change
+            logout();
+            navigate('/login');
+          }}
+        />
       )}
 
       {showTrackingModal && selectedOrderForTracking && (

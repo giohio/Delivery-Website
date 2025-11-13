@@ -109,14 +109,23 @@ def create_order():
     data = request.get_json(force=True)
     pickup_address = data.get("pickup_address")
     delivery_address = data.get("delivery_address")
-    merchant_id = data.get("merchant_id")
-    pickup_lat = float(data.get("pickup_lat"))
-    pickup_lng = float(data.get("pickup_lng"))
-    delivery_lat = float(data.get("delivery_lat"))
-    delivery_lng = float(data.get("delivery_lng"))
+    merchant_id = data.get("merchant_id")  # Optional, can be None for customer direct orders
+    pickup_lat = data.get("pickup_lat")
+    pickup_lng = data.get("pickup_lng")
+    delivery_lat = data.get("delivery_lat")
+    delivery_lng = data.get("delivery_lng")
 
-    if not all([pickup_address, delivery_address, merchant_id, pickup_lat, pickup_lng, delivery_lat, delivery_lng]):
+    if not all([pickup_address, delivery_address, pickup_lat is not None, pickup_lng is not None, delivery_lat is not None, delivery_lng is not None]):
         return jsonify({"ok": False, "error": "Missing address or coordinates"}), 400
+
+    # Convert coordinates to float after validation
+    try:
+        pickup_lat = float(pickup_lat)
+        pickup_lng = float(pickup_lng)
+        delivery_lat = float(delivery_lat)
+        delivery_lng = float(delivery_lng)
+    except (ValueError, TypeError):
+        return jsonify({"ok": False, "error": "Invalid coordinate format"}), 400
 
     #distance
     distance_km = round(haversine(pickup_lat, pickup_lng, delivery_lat, delivery_lng), 2)
@@ -155,20 +164,6 @@ def create_order():
 
 
 # List orders for current user
-@orders_bp.get("")
-def list_orders():
-    user, err = current_session(request)
-    if err:
-        return jsonify({"ok": False, "error": err}), 401
-
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    # customers see their orders
-    cur.execute("SELECT * FROM app.orders WHERE customer_id = %s ORDER BY created_at DESC;", (user["user_id"],))
-    rows = cur.fetchall()
-    cur.close(); conn.close()
-
-    return jsonify({"ok": True, "orders": rows})
 
 
 # Cancel order (customer/admin only if still pending)
@@ -249,31 +244,29 @@ def list_orders():
         return jsonify({"ok": False, "error": "Invalid role"}), 403
 
     if role_name == "admin":
+        # merchants are stored as users (role 'merchant'), join to users to get merchant name
         cur.execute("""
-            SELECT o.*, c.full_name AS customer_name, m.name AS merchant_name
+            SELECT o.*, c.full_name AS customer_name, m.full_name AS merchant_name
             FROM app.orders o
             LEFT JOIN app.users c ON o.customer_id = c.user_id
-            LEFT JOIN app.merchants m ON o.merchant_id = m.id
+            LEFT JOIN app.users m ON o.merchant_id = m.user_id
             ORDER BY o.created_at DESC;
         """)
     elif role_name == "merchant":
-        cur.execute("SELECT id FROM app.merchants WHERE owner_user_id = %s;", (user_id,))
-        merchant = cur.fetchone()
-        if not merchant:
-            cur.close(); conn.close()
-            return jsonify({"ok": False, "error": "You don't own a merchant profile"}), 403
+        # merchant users show orders where merchant_id equals their user_id
         cur.execute("""
             SELECT o.*, c.full_name AS customer_name
             FROM app.orders o
             LEFT JOIN app.users c ON o.customer_id = c.user_id
             WHERE o.merchant_id = %s
             ORDER BY o.created_at DESC;
-        """, (merchant["id"],))
+        """, (user_id,))
     else:
+        # customer: include merchant name from users table
         cur.execute("""
-            SELECT o.*, m.name AS merchant_name
+            SELECT o.*, m.full_name AS merchant_name
             FROM app.orders o
-            LEFT JOIN app.merchants m ON o.merchant_id = m.id
+            LEFT JOIN app.users m ON o.merchant_id = m.user_id
             WHERE o.customer_id = %s
             ORDER BY o.created_at DESC;
         """, (user_id,))

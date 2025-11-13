@@ -95,7 +95,7 @@ const Login: React.FC = () => {
         throw new Error(data.error || 'Login failed');
       }
       if (data.token) {
-        localStorage.setItem('token', data.token);
+        sessionStorage.setItem('token', data.token);
       }
       const backendUser = data.user;
       const displayName = backendUser?.username || backendUser?.full_name || (formData.email.split('@')[0]);

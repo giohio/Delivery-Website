@@ -4,12 +4,22 @@ import { ScrollToTop } from '@/lib/scroll-to-top';
 import ErrorPage from '../../intergration/errorHandlers/ErrorPage';
 import HomePage from './HomePage';
 import Login from '../pages/Login';
-import CustomerDashboard from '@/components/pages/CustomerDashboard';
+import OldCustomerDashboard from '@/components/pages/CustomerDashboard';
 import ShipperDashboard from '../pages/ShipperDashboardModern';
 import MerchantDashboard from '../pages/MerchantDashboardNew';
-import AdminDashboard from '@/components/pages/AdminDashboard';
+import AdminDashboard from '@/components/pages/AdminDashboardNew';
+import { AutoCustomerRoute } from './AutoCustomerRoute';
 
 import { MemberProtectedRoute } from '@/components/ui/member-protected-route';
+
+// New Customer Pages
+import CustomerDashboard from '../pages/customer/CustomerDashboard';
+import CustomerOrders from '../pages/customer/CustomerOrders';
+import CustomerCreateOrder from '../pages/customer/CustomerCreateOrder';
+import CustomerTrackOrder from '../pages/customer/CustomerTrackOrder';
+import CustomerWallet from '../pages/customer/CustomerWallet';
+import CustomerProfile from '../pages/customer/CustomerProfile';
+import CustomerCoupons from '../pages/customer/CustomerCoupons';
 
 // Layout component that includes ScrollToTop
 function Layout() {
@@ -30,6 +40,10 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
+        element: <AutoCustomerRoute />,
+      },
+      {
+        path: "home",
         element: <HomePage />,
       },
       {
@@ -37,6 +51,64 @@ const router = createBrowserRouter([
         element: <Login />,
       },
 
+      // New Customer Routes
+      {
+        path: "customer/dashboard",
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerDashboard />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "customer/orders",
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerOrders />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "customer/create-order",
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerCreateOrder />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "customer/track-order",
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerTrackOrder />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "customer/wallet",
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerWallet />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "customer/profile",
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerProfile />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "customer/coupons",
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerCoupons />
+          </MemberProtectedRoute>
+        ),
+      },
+      // Old routes (backward compatibility)
       {
         path: "customer",
         element: (

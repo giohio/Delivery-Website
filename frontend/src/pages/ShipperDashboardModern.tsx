@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Package, DollarSign, Navigation, Star, Clock, MapPin, Bell, Settings, CheckCircle, Phone, RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Package, DollarSign, Navigation, Star, Clock, MapPin, Bell, Settings, CheckCircle, RefreshCw, LogOut, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { deliveryApi, Delivery } from '../services/deliveryApi';
 import { walletApi } from '../services/walletApi';
 import { Order, orderApi } from '../services/orderApi';
+import { ratingApi, Rating } from '../services/ratingApi';
+import { ShipperProfileModal } from '../components/shipper/ShipperProfileModal';
+import { ChangePasswordModal } from '../components/customer/ChangePasswordModal';
+
+// Extended Delivery type with orders and rating
+interface DeliveryWithOrders extends Delivery {
+  orders?: Order[];
+  rating?: Rating;
+}
 
 const ShipperDashboardModern: React.FC = () => {
   const { user, logout } = useAuth();
   
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
-  const [currentDelivery, setCurrentDelivery] = useState<Delivery | null>(null);
-  const [completedToday, setCompletedToday] = useState<any[]>([]);
+  const [currentDelivery, setCurrentDelivery] = useState<DeliveryWithOrders | null>(null);
+  const [completedToday, setCompletedToday] = useState<DeliveryWithOrders[]>([]);
   const [stats, setStats] = useState({
     todayOrders: 0,
     earnings: 0,
@@ -22,6 +32,10 @@ const ShipperDashboardModern: React.FC = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadDashboardData();
@@ -81,32 +95,57 @@ const ShipperDashboardModern: React.FC = () => {
       const response = await deliveryApi.getMyDeliveries();
       console.log('My deliveries response:', response);
       const deliveries = response.deliveries || [];
+      
+      // Load all orders once
+      const ordersResponse = await orderApi.getMyOrders();
+      const allOrders = ordersResponse.orders || [];
+      console.log('All orders:', allOrders);
+      
       const ongoing = deliveries.find((d: Delivery) => 
         d.status === 'ONGOING' || d.status === 'ASSIGNED'
       );
       
-      // If we have an ongoing delivery, load its orders
+      // If we have an ongoing delivery, attach its orders
       if (ongoing) {
         console.log('Found ongoing delivery:', ongoing);
-        // Load orders for this delivery
-        try {
-          const ordersResponse = await orderApi.getMyOrders();
-          const allOrders = ordersResponse.orders || [];
-          const deliveryOrders = allOrders.filter(order => order.delivery_id === ongoing.delivery_id);
-          console.log('Orders for current delivery:', deliveryOrders);
-          
-          // Attach orders to delivery object
-          ongoing.orders = deliveryOrders;
-        } catch (err) {
-          console.error('Failed to load orders for delivery:', err);
-          ongoing.orders = [];
-        }
+        const deliveryOrders = allOrders.filter((order: Order) => order.delivery_id === ongoing.delivery_id);
+        console.log('Orders for current delivery:', deliveryOrders);
+        ongoing.orders = deliveryOrders;
       }
       
       setCurrentDelivery(ongoing || null);
       
+      // For completed deliveries, also attach their orders and ratings
       const completed = deliveries.filter((d: Delivery) => d.status === 'COMPLETED');
-      setCompletedToday(completed);
+      const completedWithOrders = await Promise.all(
+        completed.map(async (delivery: Delivery) => {
+          const deliveryOrders = allOrders.filter((order: Order) => order.delivery_id === delivery.delivery_id);
+          
+          // Try to load rating for this delivery
+          let rating = null;
+          try {
+            const ratingResponse = await ratingApi.getDeliveryRating(delivery.delivery_id);
+            if (ratingResponse && ratingResponse.rating) {
+              rating = ratingResponse.rating;
+              console.log(`Loaded rating for delivery ${delivery.delivery_id}:`, rating);
+            }
+          } catch (err: any) {
+            // No rating yet, that's ok
+            if (err.response?.status !== 404) {
+              console.error(`Error loading rating for delivery ${delivery.delivery_id}:`, err);
+            }
+          }
+          
+          return {
+            ...delivery,
+            orders: deliveryOrders,
+            rating: rating
+          };
+        })
+      );
+      
+      console.log('Completed deliveries with orders and ratings:', completedWithOrders);
+      setCompletedToday(completedWithOrders);
     } catch (err) {
       console.error('Failed to load current delivery:', err);
       setCurrentDelivery(null);
@@ -124,11 +163,26 @@ const ShipperDashboardModern: React.FC = () => {
       const deliveries = deliveriesResponse.deliveries || [];
       const completed = deliveries.filter((d: Delivery) => d.status === 'COMPLETED');
       
+      // Calculate average rating from shipper's ratings
+      let avgRating = 0;
+      if (user?.user_id) {
+        try {
+          const ratingsResponse = await ratingApi.getShipperRatings(user.user_id);
+          const ratings = ratingsResponse.ratings || [];
+          if (ratings.length > 0) {
+            const totalScore = ratings.reduce((sum: number, r: Rating) => sum + r.score, 0);
+            avgRating = Number((totalScore / ratings.length).toFixed(1));
+          }
+        } catch (err) {
+          console.log('No ratings found for shipper');
+        }
+      }
+      
       setStats({
         todayOrders: completed.length,
         earnings: walletResponse.balance || 0,
         distance: 45.2,
-        avgRating: 4.8,
+        avgRating: avgRating,
         onlineTime: '6h 30m'
       });
     } catch (err) {
@@ -257,12 +311,48 @@ const ShipperDashboardModern: React.FC = () => {
               </button>
 
               {/* User Avatar */}
-              <button 
-                onClick={() => logout()}
-                className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold hover:bg-blue-700 transition"
-              >
-                {user?.username?.charAt(0).toUpperCase() || 'S'}
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold hover:bg-blue-700 transition"
+                >
+                  {user?.username?.charAt(0).toUpperCase() || 'S'}
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border z-50">
+                    <div className="px-4 py-2 border-b">
+                      <p className="text-sm font-semibold text-gray-900">{user?.fullName || user?.username}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+
+                    <button
+                      onClick={() => { setShowUserMenu(false); setShowProfileModal(true); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </button>
+
+                    <button
+                      onClick={() => { setShowUserMenu(false); setShowSettings(true); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </button>
+
+                    <div className="border-t my-1" />
+                    <button
+                      onClick={() => { logout(); setShowUserMenu(false); navigate('/login'); }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -295,7 +385,7 @@ const ShipperDashboardModern: React.FC = () => {
               <DollarSign className="w-6 h-6 text-green-600" />
             </div>
             <p className="text-sm text-gray-600 mb-1">Earnings</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.earnings.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-gray-900">{Number(stats.earnings || 0).toLocaleString('vi-VN')} ₫</p>
           </div>
 
           {/* Distance */}
@@ -345,12 +435,12 @@ const ShipperDashboardModern: React.FC = () => {
               {/* Addresses */}
               <div className="space-y-4">
                 {currentDelivery.orders && currentDelivery.orders.length > 0 ? (
-                  currentDelivery.orders.map((order: any, index: number) => (
+                  currentDelivery.orders.map((order: Order) => (
                     <div key={order.order_id} className="border-b pb-3 mb-3 last:border-b-0">
                       <div className="flex items-center mb-2">
                         <span className="text-sm font-semibold text-blue-600">#FD{order.order_id.toString().padStart(2, '0')}</span>
                         <span className="ml-2 text-sm text-gray-500">
-                          {(order.price_estimate || 0).toLocaleString()} VND
+                          {Number(order.price_estimate || 0).toLocaleString('vi-VN')} ₫
                         </span>
                       </div>
                       <div className="flex items-start space-x-3 mb-2">
@@ -393,7 +483,7 @@ const ShipperDashboardModern: React.FC = () => {
                         <p className="text-gray-600">Distance</p>
                         <p className="font-semibold">
                           {currentDelivery.orders ? 
-                            currentDelivery.orders.reduce((sum: number, order: any) => sum + (order.distance_km || 3), 0) : 0
+                            currentDelivery.orders.reduce((sum: number, order: any) => sum + Number(order.distance_km || 0), 0).toFixed(2) : 0
                           }km
                         </p>
                       </div>
@@ -408,12 +498,12 @@ const ShipperDashboardModern: React.FC = () => {
                 </div>
 
                 <div className="text-right mt-4">
-                  <p className="text-2xl font-bold text-blue-600">#FD{currentDelivery.delivery_id.toString().padStart(2, '0')}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 mb-1">Total Earning</p>
+                  <p className="text-2xl font-bold text-blue-600">
                     {currentDelivery.orders ? 
-                      currentDelivery.orders.reduce((sum: number, order: any) => sum + (order.price_estimate || 0), 0).toLocaleString() 
-                      : 0
-                    } VND
+                      currentDelivery.orders.reduce((sum: number, order: any) => sum + Number(order.price_estimate || 0), 0).toLocaleString('vi-VN') 
+                      : '0'
+                    } ₫
                   </p>
                 </div>
               </div>
@@ -576,7 +666,7 @@ const ShipperDashboardModern: React.FC = () => {
             ) : (
               completedToday.map((delivery) => (
                 <div key={delivery.delivery_id} className="p-6">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center space-x-4 mb-3">
                         <div className="flex items-center">
@@ -599,20 +689,81 @@ const ShipperDashboardModern: React.FC = () => {
                     
                     <div className="text-right">
                       <div className="text-lg font-bold text-green-600 mb-2">
-                        Earned
+                        {delivery.orders ? 
+                          delivery.orders.reduce((sum: number, order: Order) => sum + Number(order.price_estimate || 0), 0).toLocaleString('vi-VN')
+                          : '0'
+                        } ₫
                       </div>
-                      <div className="flex items-center text-yellow-500 text-sm">
-                        <Star className="w-4 h-4 fill-current mr-1" />
-                        <span className="font-medium">5.0</span>
-                      </div>
+                      {delivery.rating ? (
+                        <div className="flex items-center text-yellow-500 text-sm">
+                          <Star className="w-4 h-4 fill-current mr-1" />
+                          <span className="font-medium">{delivery.rating.score}.0</span>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-400 italic">
+                          No rating yet
+                        </div>
+                      )}
                     </div>
                   </div>
+                  
+                  {/* Order Details */}
+                  {delivery.orders && delivery.orders.length > 0 && (
+                    <div className="border-t pt-4 space-y-3">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Orders ({delivery.orders.length}):</p>
+                      {delivery.orders.map((order: Order) => (
+                        <div key={order.order_id} className="bg-gray-50 rounded-lg p-3">
+                          <div className="flex items-center mb-2">
+                            <span className="text-sm font-semibold text-blue-600">#FD{order.order_id.toString().padStart(2, '0')}</span>
+                            <span className="ml-2 text-sm text-gray-500">
+                              {Number(order.price_estimate || 0).toLocaleString('vi-VN')} ₫
+                            </span>
+                          </div>
+                          <div className="flex items-start space-x-3 mb-2">
+                            <MapPin className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="text-xs font-medium text-gray-600">Pickup:</p>
+                              <p className="text-sm text-gray-900">{order.pickup_address}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start space-x-3">
+                            <MapPin className="w-4 h-4 text-green-500 mt-1 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="text-xs font-medium text-gray-600">Deliver:</p>
+                              <p className="text-sm text-gray-900">{order.delivery_address}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))
             )}
           </div>
         </div>
       </main>
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <ShipperProfileModal
+          onClose={() => setShowProfileModal(false)}
+          onSuccess={() => {
+            loadDashboardData();
+          }}
+        />
+      )}
+
+      {/* Settings Modal - Change Password */}
+      {showSettings && (
+        <ChangePasswordModal
+          onClose={() => setShowSettings(false)}
+          onSuccess={() => {
+            logout();
+            navigate('/login');
+          }}
+        />
+      )}
     </div>
   );
 };
