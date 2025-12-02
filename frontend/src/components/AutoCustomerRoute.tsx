@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import CustomerDashboard from './pages/CustomerDashboard';
+import CustomerDashboard from '../pages/customer/CustomerDashboard';
 
 export const AutoCustomerRoute = () => {
   const { isAuthenticated, isLoading, user } = useAuth();

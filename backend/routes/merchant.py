@@ -44,6 +44,13 @@ def create_order_for_customer():
     delivery_address = data.get("delivery_address")
     distance_km = data.get("distance_km")
     price_estimate = data.get("price_estimate")
+    service_type = data.get("service_type", "bike")
+    package_size = data.get("package_size", "small")
+    pickup_contact_name = data.get("pickup_contact_name")
+    pickup_contact_phone = data.get("pickup_contact_phone")
+    delivery_contact_name = data.get("delivery_contact_name")
+    delivery_contact_phone = data.get("delivery_contact_phone")
+    notes = data.get("notes")
 
     if not all([customer_id, pickup_address, delivery_address]):
         return jsonify({"ok": False, "error": "Missing required fields"}), 400
@@ -52,11 +59,16 @@ def create_order_for_customer():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("""
         INSERT INTO app.orders
-            (customer_id, merchant_id, pickup_address, delivery_address, status, distance_km, price_estimate)
-        VALUES (%s, %s, %s, %s, 'PENDING', %s, %s)
+            (customer_id, merchant_id, pickup_address, delivery_address, status, 
+             distance_km, price_estimate, service_type, package_size,
+             pickup_contact_name, pickup_contact_phone,
+             delivery_contact_name, delivery_contact_phone, notes)
+        VALUES (%s, %s, %s, %s, 'PENDING', %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING order_id, customer_id, merchant_id, pickup_address, delivery_address,
-                  status, distance_km, price_estimate, created_at;
-    """, (customer_id, session["user_id"], pickup_address, delivery_address, distance_km, price_estimate))
+                  status, distance_km, price_estimate, service_type, package_size, created_at;
+    """, (customer_id, session["user_id"], pickup_address, delivery_address, distance_km, price_estimate,
+          service_type, package_size, pickup_contact_name, pickup_contact_phone,
+          delivery_contact_name, delivery_contact_phone, notes))
     order = cur.fetchone()
     conn.commit()
     cur.close(); conn.close()
@@ -142,3 +154,119 @@ def merchant_payments():
     cur.close(); conn.close()
 
     return jsonify({"ok": True, "payments": rows})
+
+
+# merchant accepts an order (assigns themselves to it)
+@merchant_bp.post("/orders/<int:order_id>/accept")
+def accept_order(order_id):
+    session, err = current_session(request)
+    if err:
+        return jsonify({"ok": False, "error": err}), 401
+    if role_name(session["role_id"]) != "merchant":
+        return jsonify({"ok": False, "error": "Only merchants can accept orders"}), 403
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    # Check if order exists and is not already assigned
+    cur.execute("""
+        SELECT order_id, customer_id, merchant_id, status
+        FROM app.orders
+        WHERE order_id = %s;
+    """, (order_id,))
+    order = cur.fetchone()
+    
+    if not order:
+        cur.close(); conn.close()
+        return jsonify({"ok": False, "error": "Order not found"}), 404
+    
+    if order["merchant_id"] is not None:
+        cur.close(); conn.close()
+        return jsonify({"ok": False, "error": "Order already assigned to a merchant"}), 400
+    
+    # Assign merchant to order
+    cur.execute("""
+        UPDATE app.orders
+        SET merchant_id = %s, status = 'ACCEPTED'
+        WHERE order_id = %s
+        RETURNING order_id, customer_id, merchant_id, pickup_address, 
+                  delivery_address, status, created_at;
+    """, (session["user_id"], order_id))
+    updated_order = cur.fetchone()
+    conn.commit()
+    
+    # Send notification to customer
+    try:
+        push_notification(
+            updated_order["customer_id"], 
+            "Order Accepted by Merchant",
+            f"Your order #{order_id} has been accepted and is being processed."
+        )
+    except Exception as e:
+        print("Notification error:", e)
+    
+    cur.close(); conn.close()
+    return jsonify({"ok": True, "order": updated_order})
+
+
+# merchant views available orders (not yet assigned to any merchant)
+@merchant_bp.get("/available-orders")
+def get_available_orders():
+    session, err = current_session(request)
+    if err:
+        return jsonify({"ok": False, "error": err}), 401
+    if role_name(session["role_id"]) != "merchant":
+        return jsonify({"ok": False, "error": "Only merchants can view available orders"}), 403
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+        SELECT o.*, u.full_name AS customer_name
+        FROM app.orders o
+        JOIN app.users u ON o.customer_id = u.user_id
+        WHERE o.merchant_id IS NULL AND o.status = 'PENDING'
+        ORDER BY o.created_at DESC;
+    """)
+    rows = cur.fetchall()
+    cur.close(); conn.close()
+
+    return jsonify({"ok": True, "orders": rows})
+
+
+# search customers by name, email, or phone
+@merchant_bp.get("/customers/search")
+def search_customers():
+    session, err = current_session(request)
+    if err:
+        return jsonify({"ok": False, "error": err}), 401
+    if role_name(session["role_id"]) != "merchant":
+        return jsonify({"ok": False, "error": "Only merchants can search customers"}), 403
+
+    query = request.args.get("q", "").strip()
+    
+    if not query or len(query) < 2:
+        return jsonify({"ok": True, "customers": []})
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    # Search by name, email, or phone for customers only (role_id = 4)
+    cur.execute("""
+        SELECT user_id, full_name, email, phone, created_at
+        FROM app.users
+        WHERE role_id = 4 
+          AND is_active = TRUE
+          AND (
+              LOWER(full_name) LIKE LOWER(%s) OR
+              LOWER(email) LIKE LOWER(%s) OR
+              phone LIKE %s
+          )
+        ORDER BY full_name
+        LIMIT 20;
+    """, (f"%{query}%", f"%{query}%", f"%{query}%"))
+    
+    customers = cur.fetchall()
+    cur.close(); conn.close()
+
+    return jsonify({"ok": True, "customers": customers})
+

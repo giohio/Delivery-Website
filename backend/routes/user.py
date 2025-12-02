@@ -19,6 +19,7 @@ def get_current_user(current_user):
                 u.email,
                 u.full_name,
                 u.phone,
+                u.avatar,
                 u.created_at,
                 r.role_name
             FROM app.users u
@@ -36,8 +37,9 @@ def get_current_user(current_user):
             'email': user[1],
             'full_name': user[2],
             'phone': user[3],
-            'created_at': user[4].isoformat() if user[4] else None,
-            'role': user[5]
+            'avatar': user[4],
+            'created_at': user[5].isoformat() if user[5] else None,
+            'role': user[6]
         }), 200
         
     except Exception as e:
@@ -52,11 +54,12 @@ def get_current_user(current_user):
 @user_bp.route('/api/user/profile', methods=['PUT'])
 @token_required
 def update_profile(current_user):
-    """Update user profile (name, phone)"""
+    """Update user profile (name, phone, avatar)"""
     try:
         data = request.get_json()
         full_name = data.get('fullName')
         phone = data.get('phone')
+        avatar = data.get('avatar')
         
         if not full_name:
             return jsonify({'error': 'Full name is required'}), 400
@@ -66,10 +69,10 @@ def update_profile(current_user):
         
         cur.execute("""
             UPDATE app.users
-            SET full_name = %s, phone = %s
+            SET full_name = %s, phone = %s, avatar = %s
             WHERE user_id = %s
-            RETURNING user_id, email, full_name, phone
-        """, (full_name, phone, current_user['user_id']))
+            RETURNING user_id, email, full_name, phone, avatar
+        """, (full_name, phone, avatar, current_user['user_id']))
         
         updated_user = cur.fetchone()
         conn.commit()
@@ -80,7 +83,8 @@ def update_profile(current_user):
                 'user_id': updated_user[0],
                 'email': updated_user[1],
                 'full_name': updated_user[2],
-                'phone': updated_user[3]
+                'phone': updated_user[3],
+                'avatar': updated_user[4]
             }
         }), 200
         

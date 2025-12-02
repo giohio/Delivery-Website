@@ -23,7 +23,7 @@ export const userApi = {
   },
 
   // Update user profile
-  updateProfile: async (data: { fullName: string; phone?: string }) => {
+  updateProfile: async (data: { fullName: string; phone?: string; avatar?: string }) => {
     const response = await fetch(`${API_URL}/api/user/profile`, {
       method: 'PUT',
       headers: {

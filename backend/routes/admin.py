@@ -29,6 +29,124 @@ def is_admin(session):
 
 # ---- Endpoints ----
 
+# KYC Management
+@admin_bp.get("/kyc/pending")
+def get_pending_kyc():
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+        SELECT 
+            u.user_id, u.full_name, u.email, u.phone,
+            sp.id_number, sp.id_front_image, sp.id_back_image,
+            sp.driver_license, sp.license_image,
+            sp.vehicle_type, sp.license_plate, sp.vehicle_image,
+            sp.verification_status, sp.created_at as submitted_at
+        FROM app.users u
+        JOIN app.shipper_profiles sp ON u.user_id = sp.user_id
+        WHERE sp.verification_status = 'pending'
+        ORDER BY sp.created_at DESC;
+    """)
+    submissions = cur.fetchall()
+    cur.close(); conn.close()
+    return jsonify({"ok": True, "submissions": submissions})
+
+@admin_bp.get("/kyc/all")
+def get_all_kyc():
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    status = request.args.get('status')  # pending, approved, rejected, or None for all
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    query = """
+        SELECT 
+            u.user_id, u.full_name, u.email, u.phone,
+            sp.id_number, sp.id_front_image, sp.id_back_image,
+            sp.driver_license, sp.license_image,
+            sp.vehicle_type, sp.license_plate, sp.vehicle_image,
+            sp.verification_status, sp.created_at as submitted_at
+        FROM app.users u
+        JOIN app.shipper_profiles sp ON u.user_id = sp.user_id
+    """
+    
+    if status:
+        query += " WHERE sp.verification_status = %s"
+        cur.execute(query + " ORDER BY sp.created_at DESC;", (status,))
+    else:
+        cur.execute(query + " ORDER BY sp.created_at DESC;")
+    
+    submissions = cur.fetchall()
+    cur.close(); conn.close()
+    return jsonify({"ok": True, "submissions": submissions})
+
+@admin_bp.put("/kyc/<int:user_id>/approve")
+def approve_kyc(user_id):
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Update verification status
+    cur.execute("""
+        UPDATE app.shipper_profiles 
+        SET verification_status = 'approved'
+        WHERE user_id = %s;
+    """, (user_id,))
+    
+    # Get user email for notification
+    cur.execute("SELECT email, full_name FROM app.users WHERE user_id = %s;", (user_id,))
+    user = cur.fetchone()
+    
+    conn.commit()
+    cur.close(); conn.close()
+    
+    # Send notification
+    if user:
+        push_notification(user_id, "KYC Approved", f"Congratulations {user[1]}! Your KYC verification has been approved.")
+    
+    return jsonify({"ok": True, "message": "KYC approved successfully"})
+
+@admin_bp.put("/kyc/<int:user_id>/reject")
+def reject_kyc(user_id):
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    data = request.get_json()
+    reason = data.get('reason', 'Document verification failed')
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Update verification status
+    cur.execute("""
+        UPDATE app.shipper_profiles 
+        SET verification_status = 'rejected'
+        WHERE user_id = %s;
+    """, (user_id,))
+    
+    # Get user email
+    cur.execute("SELECT email, full_name FROM app.users WHERE user_id = %s;", (user_id,))
+    user = cur.fetchone()
+    
+    conn.commit()
+    cur.close(); conn.close()
+    
+    # Send notification
+    if user:
+        push_notification(user_id, "KYC Rejected", f"Sorry {user[1]}, your KYC verification was rejected. Reason: {reason}")
+    
+    return jsonify({"ok": True, "message": "KYC rejected"})
+
 # summary (counts)
 @admin_bp.get("/summary")
 def dashboard_summary():

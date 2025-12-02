@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Phone, MapPin, Bike, FileText, CreditCard, CheckCircle, AlertCircle, Camera } from 'lucide-react';
+import { X, User, Phone, MapPin, Bike, FileText, CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { courierApi, CourierProfile } from '../../services/courierApi';
+import uploadApi from '../../services/uploadApi';
+import ImageUploader from '../common/ImageUploader';
 
 interface ShipperProfileModalProps {
   onClose: () => void;
@@ -104,9 +106,15 @@ export const ShipperProfileModal: React.FC<ShipperProfileModalProps> = ({ onClos
     }
   };
 
-  const handleFileUpload = (_field: string) => {
-    // TODO: Implement file upload
-    alert('File upload sẽ được implement sau');
+  const handleKYCUpload = async (file: File, field: string): Promise<string> => {
+    try {
+      const fileUrl = await uploadApi.uploadKYC(file);
+      setFormData(prev => ({ ...prev, [field]: fileUrl }));
+      return fileUrl;
+    } catch (error: any) {
+      setError(error.message || 'Upload failed');
+      throw error;
+    }
   };
 
   const renderPersonalTab = () => (
@@ -181,28 +189,18 @@ export const ShipperProfileModal: React.FC<ShipperProfileModalProps> = ({ onClos
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh mặt trước CCCD</label>
-          <button
-            type="button"
-            onClick={() => handleFileUpload('idFrontImage')}
-            className="w-full h-32 border-2 border-dashed rounded-lg hover:bg-gray-50 flex flex-col items-center justify-center"
-          >
-            <Camera className="w-8 h-8 text-gray-400" />
-            <span className="text-sm text-gray-500 mt-2">Tải ảnh lên</span>
-          </button>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh mặt sau CCCD</label>
-          <button
-            type="button"
-            onClick={() => handleFileUpload('idBackImage')}
-            className="w-full h-32 border-2 border-dashed rounded-lg hover:bg-gray-50 flex flex-col items-center justify-center"
-          >
-            <Camera className="w-8 h-8 text-gray-400" />
-            <span className="text-sm text-gray-500 mt-2">Tải ảnh lên</span>
-          </button>
-        </div>
+        <ImageUploader
+          label="Ảnh mặt trước CCCD"
+          currentImage={formData.idFrontImage}
+          onUpload={(file) => handleKYCUpload(file, 'idFrontImage')}
+          aspectRatio="3/2"
+        />
+        <ImageUploader
+          label="Ảnh mặt sau CCCD"
+          currentImage={formData.idBackImage}
+          onUpload={(file) => handleKYCUpload(file, 'idBackImage')}
+          aspectRatio="3/2"
+        />
       </div>
 
       {/* Driver License */}
@@ -222,17 +220,12 @@ export const ShipperProfileModal: React.FC<ShipperProfileModalProps> = ({ onClos
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh bằng lái</label>
-        <button
-          type="button"
-          onClick={() => handleFileUpload('licenseImage')}
-          className="w-full h-32 border-2 border-dashed rounded-lg hover:bg-gray-50 flex flex-col items-center justify-center"
-        >
-          <Camera className="w-8 h-8 text-gray-400" />
-          <span className="text-sm text-gray-500 mt-2">Tải ảnh lên</span>
-        </button>
-      </div>
+      <ImageUploader
+        label="Ảnh bằng lái"
+        currentImage={formData.licenseImage}
+        onUpload={(file) => handleKYCUpload(file, 'licenseImage')}
+        aspectRatio="3/2"
+      />
 
       {/* Vehicle Info */}
       <div>
@@ -264,17 +257,12 @@ export const ShipperProfileModal: React.FC<ShipperProfileModalProps> = ({ onClos
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Ảnh phương tiện</label>
-        <button
-          type="button"
-          onClick={() => handleFileUpload('vehicleImage')}
-          className="w-full h-32 border-2 border-dashed rounded-lg hover:bg-gray-50 flex flex-col items-center justify-center"
-        >
-          <Camera className="w-8 h-8 text-gray-400" />
-          <span className="text-sm text-gray-500 mt-2">Tải ảnh lên</span>
-        </button>
-      </div>
+      <ImageUploader
+        label="Ảnh phương tiện"
+        currentImage={formData.vehicleImage}
+        onUpload={(file) => handleKYCUpload(file, 'vehicleImage')}
+        aspectRatio="4/3"
+      />
     </div>
   );
 
@@ -412,7 +400,7 @@ export const ShipperProfileModal: React.FC<ShipperProfileModalProps> = ({ onClos
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
           <form onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4">

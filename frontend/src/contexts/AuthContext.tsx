@@ -4,11 +4,14 @@ export interface User {
   email?: string;
   username?: string;
   fullName?: string;
+  full_name?: string;
   phone?: string;
   avatar?: string;
   role_id?: number;
   role_name?: string;
   user_id?: number;
+  created_at?: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -19,6 +22,7 @@ interface AuthContextType {
   logout: () => void;
   getToken: () => string | null;
   getUserRole: () => string | null;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -85,6 +89,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return user?.role_name || null;
   };
 
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
@@ -126,7 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         getToken,
-        getUserRole
+        getUserRole,
+        updateUser
       }}
     >
       {children}

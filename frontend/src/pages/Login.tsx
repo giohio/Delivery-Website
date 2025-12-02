@@ -70,8 +70,7 @@ const Login: React.FC = () => {
         navigate('/merchant');
         break;
       case 'shipper':
-      case 'courier':
-        navigate('/courier');
+        navigate('/shipper/dashboard');
         break;
       case 'customer':
       default:

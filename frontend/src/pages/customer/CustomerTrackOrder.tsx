@@ -2,7 +2,6 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import {
   LayoutDashboard,
   Package,
-  PlusCircle,
   MapPin,
   Wallet,
   Gift,
@@ -12,15 +11,50 @@ import {
   Clock,
   Phone,
   Star,
+  CheckCircle,
+  Truck,
+  Home,
+  ArrowRight,
+  RefreshCw,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { orderApi } from '../../services/orderApi';
+import { deliveryApi } from '../../services/deliveryApi';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix Leaflet icon issue
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Custom marker icons
+const pickupIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const deliveryIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 const menuItems = [
   { path: '/customer/dashboard', icon: <LayoutDashboard />, label: 'Dashboard' },
   { path: '/customer/orders', icon: <Package />, label: 'My Orders' },
-  { path: '/customer/create-order', icon: <PlusCircle />, label: 'Create Order' },
   { path: '/customer/track-order', icon: <MapPin />, label: 'Track Order' },
   { path: '/customer/wallet', icon: <Wallet />, label: 'Wallet' },
   { path: '/customer/coupons', icon: <Gift />, label: 'Coupons' },
@@ -33,7 +67,9 @@ export default function CustomerTrackOrder() {
   
   const [orderId, setOrderId] = useState(orderIdFromUrl || '');
   const [order, setOrder] = useState<any>(null);
+  const [delivery, setDelivery] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -51,31 +87,68 @@ export default function CustomerTrackOrder() {
     try {
       setLoading(true);
       setError('');
+      
+      // Get order details
       const response = await orderApi.getMyOrders();
       const foundOrder = response.orders.find((o: any) => o.order_id.toString() === orderId);
       
       if (foundOrder) {
         setOrder(foundOrder);
+        
+        // Get delivery info if order is assigned
+        if (foundOrder.delivery_id) {
+          try {
+            const deliveriesResponse = await deliveryApi.getMyDeliveries();
+            const foundDelivery = deliveriesResponse.deliveries?.find((d: any) => d.delivery_id === foundOrder.delivery_id);
+            if (foundDelivery) {
+              setDelivery(foundDelivery);
+            }
+          } catch (err) {
+            console.error('Failed to fetch delivery:', err);
+          }
+        }
       } else {
         setError('Order not found');
         setOrder(null);
+        setDelivery(null);
       }
     } catch (err) {
       setError('Failed to fetch order');
       setOrder(null);
+      setDelivery(null);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleRefresh = async () => {
+    if (!order) return;
+    setRefreshing(true);
+    await handleSearch();
+    setRefreshing(false);
+  };
+
   const getStatusTimeline = (status: string) => {
-    const statuses = ['PENDING', 'ASSIGNED', 'ONGOING', 'COMPLETED'];
-    const currentIndex = statuses.indexOf(status);
+    // Normalize status
+    const normalizedStatus = status.toUpperCase();
+    
+    const statuses = [
+      { key: 'PENDING', label: 'Order Placed', icon: Package },
+      { key: 'ASSIGNED', label: 'Shipper Assigned', icon: User },
+      { key: 'ONGOING', label: 'In Transit', icon: Truck },
+      { key: 'COMPLETED', label: 'Delivered', icon: CheckCircle }
+    ];
+    
+    // Map DELIVERED to COMPLETED
+    const mappedStatus = normalizedStatus === 'DELIVERED' ? 'COMPLETED' : normalizedStatus;
+    
+    const statusIndex = statuses.findIndex(s => s.key === mappedStatus);
     
     return statuses.map((s, index) => ({
-      label: s,
-      active: index <= currentIndex,
-      completed: index < currentIndex,
+      ...s,
+      active: index <= statusIndex,
+      completed: index < statusIndex,
+      current: index === statusIndex,
     }));
   };
 
@@ -136,136 +209,345 @@ export default function CustomerTrackOrder() {
       {order ? (
         <>
           {/* Status Timeline */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <h3 className="font-semibold text-gray-900 mb-6">Order Status</h3>
-            <div className="flex items-center justify-between">
-              {getStatusTimeline(order.status).map((item, index) => (
-                <div key={item.label} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      item.completed
-                        ? 'bg-green-500 text-white'
-                        : item.active
-                        ? 'bg-teal-500 text-white'
-                        : 'bg-gray-200 text-gray-400'
-                    }`}>
-                      {item.completed ? '✓' : index + 1}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Order Timeline</h3>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center space-x-2 text-teal-600 hover:text-teal-700 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+                <span className="font-medium">Refresh</span>
+              </button>
+            </div>
+            
+            <div className="relative">
+              {/* Timeline Line */}
+              <div className="absolute top-8 left-8 h-1 bg-gray-200" style={{ width: 'calc(100% - 4rem)' }}>
+                <div 
+                  className="h-full bg-gradient-to-r from-teal-500 to-green-500 transition-all duration-500"
+                  style={{ width: `${(getStatusTimeline(order.status).filter(s => s.completed).length / 3) * 100}%` }}
+                />
+              </div>
+              
+              {/* Timeline Steps */}
+              <div className="relative flex items-start justify-between">
+                {getStatusTimeline(order.status).map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.key} className="flex flex-col items-center" style={{ width: '25%' }}>
+                      <div className={`relative z-10 w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
+                        item.completed
+                          ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white scale-110 ring-4 ring-green-200'
+                          : item.current
+                          ? 'bg-gradient-to-br from-orange-500 to-red-600 text-white scale-125 animate-pulse ring-4 ring-orange-300'
+                          : 'bg-white border-4 border-gray-300 text-gray-400'
+                      }`}>
+                        {item.completed ? (
+                          <CheckCircle className="w-8 h-8" />
+                        ) : (
+                          <Icon className="w-7 h-7" />
+                        )}
+                      </div>
+                      <div className="text-center mt-4">
+                        <p className={`text-sm font-bold ${
+                          item.current ? 'text-orange-600 text-base' : item.active ? 'text-gray-900' : 'text-gray-400'
+                        }`}>
+                          {item.label}
+                        </p>
+                        {item.current && (
+                          <div className="mt-1 px-3 py-1 bg-orange-100 border border-orange-300 rounded-full">
+                            <p className="text-xs text-orange-700 font-bold">● IN PROGRESS</p>
+                          </div>
+                        )}
+                        {item.completed && (
+                          <p className="text-xs text-green-600 font-medium mt-1">✓ Completed</p>
+                        )}
+                      </div>
                     </div>
-                    <p className={`text-sm mt-2 font-medium ${
-                      item.active ? 'text-gray-900' : 'text-gray-400'
-                    }`}>
-                      {item.label}
-                    </p>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Current Status Badge */}
+            <div className="mt-8 bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-teal-600 rounded-full p-2">
+                    <Package className="w-5 h-5 text-white" />
                   </div>
-                  {index < 3 && (
-                    <div className={`flex-1 h-1 mx-2 ${
-                      item.completed ? 'bg-green-500' : 'bg-gray-200'
-                    }`} />
-                  )}
+                  <div>
+                    <p className="text-sm text-gray-600">Current Status</p>
+                    <p className="text-lg font-bold text-gray-900">{order.status}</p>
+                  </div>
                 </div>
-              ))}
+                {order.status === 'ONGOING' && (
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">Estimated Arrival</p>
+                    <p className="text-2xl font-bold text-teal-600">~25 min</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Map */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">Live Tracking</h3>
-                  <button className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center space-x-1">
-                    <Navigation className="w-4 h-4" />
-                    <span>Refresh</span>
-                  </button>
-                </div>
-                <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-600">Map tracking coming soon</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Real-time GPS tracking will be available here
-                    </p>
+            {/* Map & Route */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Map */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-teal-600 to-cyan-600 p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
+                        <Navigation className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold">Live Tracking</h3>
+                        <p className="text-teal-100 text-sm">Real-time location tracking</p>
+                      </div>
+                    </div>
+                    {order.distance_km && (
+                      <div className="text-right">
+                        <p className="text-teal-100 text-sm">Distance</p>
+                        <p className="text-2xl font-bold">{Number(order.distance_km).toFixed(1)} km</p>
+                      </div>
+                    )}
                   </div>
                 </div>
+                
+                {order.pickup_lat && order.pickup_lng && order.delivery_lat && order.delivery_lng ? (
+                  <div className="h-96">
+                    <MapContainer
+                      center={[
+                        (order.pickup_lat + order.delivery_lat) / 2,
+                        (order.pickup_lng + order.delivery_lng) / 2
+                      ]}
+                      zoom={13}
+                      style={{ height: '100%', width: '100%' }}
+                    >
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      />
+                      <Marker position={[order.pickup_lat, order.pickup_lng]} icon={pickupIcon}>
+                        <Popup>
+                          <div className="text-sm">
+                            <p className="font-semibold text-green-600">Pickup Location</p>
+                            <p>{order.pickup_address}</p>
+                          </div>
+                        </Popup>
+                      </Marker>
+                      <Marker position={[order.delivery_lat, order.delivery_lng]} icon={deliveryIcon}>
+                        <Popup>
+                          <div className="text-sm">
+                            <p className="font-semibold text-red-600">Delivery Location</p>
+                            <p>{order.delivery_address}</p>
+                          </div>
+                        </Popup>
+                      </Marker>
+                      <Polyline
+                        positions={[
+                          [order.pickup_lat, order.pickup_lng],
+                          [order.delivery_lat, order.delivery_lng]
+                        ]}
+                        pathOptions={{ color: '#14b8a6', weight: 4, opacity: 0.7 }}
+                      />
+                    </MapContainer>
+                  </div>
+                ) : (
+                  <div className="h-96 bg-gray-50 flex items-center justify-center">
+                    <div className="text-center">
+                      <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-600 font-medium">Map Not Available</p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Location data not available for this order
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Route Details */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Route Details</h3>
+                <div className="space-y-4">
+                  {/* Pickup */}
+                  <div className="flex items-start space-x-4">
+                    <div className="bg-green-100 rounded-xl p-3 flex-shrink-0">
+                      <Home className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Pickup Location</p>
+                      <p className="text-gray-900 font-medium">{order.pickup_address}</p>
+                      {order.pickup_contact_name && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          <p className="flex items-center">
+                            <User className="w-4 h-4 mr-1" />
+                            {order.pickup_contact_name}
+                          </p>
+                          {order.pickup_contact_phone && (
+                            <p className="flex items-center mt-1">
+                              <Phone className="w-4 h-4 mr-1" />
+                              {order.pickup_contact_phone}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center py-2">
+                    <ArrowRight className="w-6 h-6 text-gray-400" />
+                  </div>
+
+                  {/* Delivery */}
+                  <div className="flex items-start space-x-4">
+                    <div className="bg-red-100 rounded-xl p-3 flex-shrink-0">
+                      <MapPin className="w-6 h-6 text-red-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Delivery Location</p>
+                      <p className="text-gray-900 font-medium">{order.delivery_address}</p>
+                      {order.delivery_contact_name && (
+                        <div className="mt-2 text-sm text-gray-600">
+                          <p className="flex items-center">
+                            <User className="w-4 h-4 mr-1" />
+                            {order.delivery_contact_name}
+                          </p>
+                          {order.delivery_contact_phone && (
+                            <p className="flex items-center mt-1">
+                              <Phone className="w-4 h-4 mr-1" />
+                              {order.delivery_contact_phone}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {order.notes && (
+                  <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide mb-1">Delivery Notes</p>
+                    <p className="text-sm text-amber-900">{order.notes}</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Order Details */}
+            {/* Sidebar */}
             <div className="space-y-6">
               {/* Order Info */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Order Details</h3>
-                <div className="space-y-4">
+              <div className="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl shadow-lg p-6 text-white">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Package className="w-8 h-8" />
                   <div>
-                    <p className="text-sm text-gray-600">Order ID</p>
-                    <p className="font-semibold text-gray-900">#{order.order_id}</p>
+                    <p className="text-teal-100 text-sm">Order ID</p>
+                    <p className="text-2xl font-bold">#{order.order_id}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Amount</p>
-                    <p className="font-semibold text-gray-900">{formatCurrency(order.price_estimate)}</p>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <p className="text-teal-100">Service Type</p>
+                    <p className="font-bold">{order.service_type || 'Standard'}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Created</p>
-                    <p className="font-semibold text-gray-900">
-                      {new Date(order.created_at).toLocaleString('vi-VN')}
-                    </p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-teal-100">Package Size</p>
+                    <p className="font-bold">{order.package_size || 'Medium'}</p>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-white/20 pt-3">
+                    <p className="text-teal-100">Total Amount</p>
+                    <p className="text-2xl font-bold">{formatCurrency(order.price_estimate || 0)}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Addresses */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Addresses</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <MapPin className="w-4 h-4 text-blue-600" />
-                      <p className="text-sm font-medium text-gray-600">Pickup</p>
-                    </div>
-                    <p className="text-sm text-gray-900 ml-6">{order.pickup_address}</p>
-                  </div>
-                  <div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <MapPin className="w-4 h-4 text-green-600" />
-                      <p className="text-sm font-medium text-gray-600">Delivery</p>
-                    </div>
-                    <p className="text-sm text-gray-900 ml-6">{order.delivery_address}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Shipper Info (if assigned) */}
-              {order.status !== 'PENDING' && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                  <h3 className="font-semibold text-gray-900 mb-4">Shipper Info</h3>
+              {/* Shipper Info */}
+              {delivery && order.status !== 'PENDING' && (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Your Shipper</h3>
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold">
-                      S
+                    <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                      {delivery.shipper_name ? delivery.shipper_name.charAt(0).toUpperCase() : 'S'}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">Shipper Name</p>
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="text-sm text-gray-600">4.8 (120 reviews)</span>
+                      <p className="font-bold text-gray-900 text-lg">{delivery.shipper_name || 'Shipper'}</p>
+                      <div className="flex items-center space-x-1 mt-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                        ))}
+                        <span className="text-sm text-gray-600 ml-1">(4.9)</span>
                       </div>
                     </div>
                   </div>
-                  <button className="w-full bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 flex items-center justify-center space-x-2">
+                  <button className="w-full bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-4 py-3 rounded-xl hover:from-teal-700 hover:to-cyan-700 transition-all flex items-center justify-center space-x-2 font-semibold shadow-lg">
                     <Phone className="w-5 h-5" />
-                    <span>Call Shipper</span>
+                    <span>Contact Shipper</span>
                   </button>
                 </div>
               )}
 
-              {/* ETA */}
-              {order.status === 'ONGOING' && (
-                <div className="bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl p-6 text-white">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <Clock className="w-6 h-6" />
-                    <h3 className="font-semibold">Estimated Arrival</h3>
+              {/* Timeline Info */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Timestamps</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Order Created</span>
+                    <span className="font-medium text-gray-900">
+                      {new Date(order.created_at).toLocaleString('vi-VN', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit'
+                      })}
+                    </span>
                   </div>
-                  <p className="text-3xl font-bold">15 mins</p>
-                  <p className="text-teal-100 text-sm mt-1">Your order is on the way!</p>
+                  {delivery?.created_at && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Shipper Assigned</span>
+                      <span className="font-medium text-gray-900">
+                        {new Date(delivery.created_at).toLocaleString('vi-VN', { 
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          day: '2-digit',
+                          month: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  {delivery?.updated_at && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Last Updated</span>
+                      <span className="font-medium text-gray-900">
+                        {new Date(delivery.updated_at).toLocaleString('vi-VN', { 
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          day: '2-digit',
+                          month: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ETA Card */}
+              {order.status === 'ONGOING' && (
+                <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg p-6 text-white">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <Clock className="w-8 h-8" />
+                    <div>
+                      <p className="text-purple-100 text-sm">Estimated Time</p>
+                      <p className="text-3xl font-bold">15-25 min</p>
+                    </div>
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3">
+                    <p className="text-sm">🚚 Your order is on its way!</p>
+                  </div>
                 </div>
               )}
             </div>

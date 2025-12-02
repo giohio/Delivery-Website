@@ -14,7 +14,6 @@ import { useState } from 'react';
 const menuItems = [
   { path: '/customer/dashboard', icon: <LayoutDashboard />, label: 'Dashboard' },
   { path: '/customer/orders', icon: <Package />, label: 'My Orders' },
-  { path: '/customer/create-order', icon: <PlusCircle />, label: 'Create Order' },
   { path: '/customer/track-order', icon: <MapPin />, label: 'Track Order' },
   { path: '/customer/wallet', icon: <Wallet />, label: 'Wallet' },
   { path: '/customer/coupons', icon: <Gift />, label: 'Coupons' },

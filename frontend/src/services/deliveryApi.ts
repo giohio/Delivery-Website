@@ -90,4 +90,16 @@ export const deliveryApi = {
     );
     return response.data;
   },
+
+  // Accept an order (create delivery with single order)
+  acceptOrder: async (orderId: number) => {
+    const response = await axios.post(
+      `${API_BASE_URL}/deliveries`,
+      { order_ids: [orderId] },
+      {
+        headers: getAuthHeader(),
+      }
+    );
+    return response.data;
+  },
 };

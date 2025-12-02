@@ -42,4 +42,22 @@ export const walletApi = {
     });
     return response.data;
   },
+
+  // Verify payment after QR transfer
+  verifyPayment: async (transactionRef: string, amount: number) => {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/payment/verify`,
+      {
+        transaction_ref: transactionRef,
+        amount: amount,
+      },
+      {
+        headers: {
+          ...getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  },
 };

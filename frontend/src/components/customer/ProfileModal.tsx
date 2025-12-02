@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
-import { X, User, Phone, Mail, Calendar, Camera } from 'lucide-react';
+import { X, User, Phone, Mail, Calendar, Camera, Upload } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { userApi } from '../../services/userApi';
+import uploadApi from '../../services/uploadApi';
 
 interface ProfileModalProps {
   onClose: () => void;
   onSuccess: () => void;
+  userProfile: any;
 }
 
-export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose, onSuccess }) => {
-  const { user } = useAuth();
+export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose, onSuccess, userProfile }) => {
+  const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || '',
-    phone: user?.phone || '',
-    avatar: user?.avatar || '',
+    fullName: userProfile?.full_name || '',
+    phone: userProfile?.phone || '',
+    avatar: userProfile?.avatar || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,6 +30,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose, onSuccess }
       await userApi.updateProfile({
         fullName: formData.fullName,
         phone: formData.phone || undefined,
+        avatar: formData.avatar || undefined,
+      });
+      
+      // Update user in context
+      updateUser({
+        fullName: formData.fullName,
+        full_name: formData.fullName,
+        phone: formData.phone,
+        avatar: formData.avatar,
       });
       
       alert('Cập nhật profile thành công!');
@@ -36,6 +48,34 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose, onSuccess }
       setError(err.message || 'Failed to update profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Ảnh không được vượt quá 2MB');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Vui lòng chọn file ảnh');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError('');
+      const avatarUrl = await uploadApi.uploadAvatar(file);
+      setFormData({ ...formData, avatar: avatarUrl });
+    } catch (err: any) {
+      setError(err.message || 'Upload ảnh thất bại');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -65,13 +105,33 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose, onSuccess }
                 <User className="w-10 h-10 text-gray-400" />
               )}
             </div>
-            <button
-              type="button"
-              className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-sm flex items-center space-x-2"
-            >
-              <Camera className="w-4 h-4" />
-              <span>Đổi ảnh</span>
-            </button>
+            <div>
+              <label
+                htmlFor="avatar-upload"
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-sm flex items-center space-x-2 cursor-pointer"
+              >
+                {uploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span>Đang tải...</span>
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-4 h-4" />
+                    <span>Đổi ảnh</span>
+                  </>
+                )}
+              </label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                disabled={uploading}
+                className="hidden"
+              />
+              <p className="text-xs text-gray-500 mt-1">Max 2MB, JPG/PNG</p>
+            </div>
           </div>
 
           {/* Full Name */}
@@ -101,7 +161,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose, onSuccess }
             </label>
             <input
               type="email"
-              value={user?.email || ''}
+              value={userProfile?.email || user?.email || ''}
               className="w-full border rounded-lg px-3 py-2 bg-gray-50 text-gray-500 cursor-not-allowed"
               disabled
             />

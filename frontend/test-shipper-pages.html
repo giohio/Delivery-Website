@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Shipper Pages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Shipper Pages</h1>
+        
+        <div id="status"></div>
+        
+        <h2>Step 1: Login</h2>
+        <button onclick="testLogin()">Login as Shipper1</button>
+        
+        <h2>Step 2: Test API Endpoints</h2>
+        <button onclick="testProfile()">Test Profile API</button>
+        <button onclick="testWallet()">Test Wallet API</button>
+        <button onclick="testDeliveries()">Test Deliveries API</button>
+        
+        <h2>Step 3: Navigate to Pages</h2>
+        <button onclick="openPage('/shipper/dashboard')">Dashboard</button>
+        <button onclick="openPage('/shipper/deliveries')">Deliveries</button>
+        <button onclick="openPage('/shipper/earnings')">Earnings</button>
+        <button onclick="openPage('/shipper/profile')">Profile</button>
+        <button onclick="openPage('/shipper/available-orders')">Available Orders</button>
+        
+        <h2>Results:</h2>
+        <pre id="results"></pre>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        const APP_URL = 'http://localhost:3001';
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            results.textContent += `[${timestamp}] ${message}\n`;
+            
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+
+        async function testLogin() {
+            try {
+                log('Attempting login...', 'info');
+                
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'shipper1@example.com',
+                        password: 'shipper123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.ok) {
+                    sessionStorage.setItem('token', data.token);
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    log(`✅ Login successful! Role: ${data.user.role}`, 'success');
+                    log(`Token saved to sessionStorage`, 'success');
+                } else {
+                    log(`❌ Login failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testProfile() {
+            try {
+                const token = sessionStorage.getItem('token');
+                if (!token) {
+                    log('❌ No token found. Please login first.', 'error');
+                    return;
+                }
+                
+                log('Testing profile API...', 'info');
+                
+                const response = await fetch(`${API_URL}/api/courier/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Profile API working! User: ${data.full_name}`, 'success');
+                    log(JSON.stringify(data, null, 2), 'info');
+                } else {
+                    log(`❌ Profile API failed: ${response.status}`, 'error');
+                    log(JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                log(`❌ Profile error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testWallet() {
+            try {
+                const token = sessionStorage.getItem('token');
+                if (!token) {
+                    log('❌ No token found. Please login first.', 'error');
+                    return;
+                }
+                
+                log('Testing wallet API...', 'info');
+                
+                const response = await fetch(`${API_URL}/wallet`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.ok) {
+                    log(`✅ Wallet API working! Balance: ${data.wallet.balance.toLocaleString()}₫`, 'success');
+                } else {
+                    log(`❌ Wallet API failed: ${data.error || response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Wallet error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDeliveries() {
+            try {
+                const token = sessionStorage.getItem('token');
+                if (!token) {
+                    log('❌ No token found. Please login first.', 'error');
+                    return;
+                }
+                
+                log('Testing deliveries API...', 'info');
+                
+                const response = await fetch(`${API_URL}/deliveries/my`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.ok) {
+                    log(`✅ Deliveries API working! Total: ${data.deliveries.length}`, 'success');
+                } else {
+                    log(`❌ Deliveries API failed: ${data.error || response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Deliveries error: ${error.message}`, 'error');
+            }
+        }
+
+        function openPage(path) {
+            const token = sessionStorage.getItem('token');
+            if (!token) {
+                log('❌ No token found. Please login first.', 'error');
+                return;
+            }
+            
+            log(`Opening ${path}...`, 'info');
+            window.open(`${APP_URL}${path}`, '_blank');
+        }
+
+        // Check if already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = sessionStorage.getItem('token');
+            if (token) {
+                log('Token found in sessionStorage', 'success');
+            } else {
+                log('No token found. Please login.', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

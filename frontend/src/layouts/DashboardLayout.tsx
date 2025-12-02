@@ -17,7 +17,7 @@ import { notificationApi } from '../services/notificationApi';
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  role: 'customer' | 'courier' | 'merchant' | 'admin';
+  role: 'customer' | 'shipper' | 'merchant' | 'admin';
   menuItems: MenuItem[];
 }
 
@@ -28,35 +28,43 @@ interface MenuItem {
   badge?: number;
 }
 
-// Role-based color themes
+// Role-based color themes with enhanced gradients
 const themes = {
   customer: {
-    primary: 'from-teal-500 to-cyan-600',
-    bg: 'bg-teal-50',
+    primary: 'from-teal-500 via-cyan-500 to-blue-500',
+    bg: 'bg-gradient-to-br from-teal-50 to-cyan-50',
     text: 'text-teal-600',
-    hover: 'hover:bg-teal-100',
-    active: 'bg-teal-100 text-teal-700',
+    hover: 'hover:bg-gradient-to-r hover:from-teal-100 hover:to-cyan-100 transition-all duration-300',
+    active: 'bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-700 shadow-md',
+    badge: 'bg-teal-500',
+    ring: 'focus:ring-teal-500',
   },
-  courier: {
-    primary: 'from-orange-500 to-red-600',
-    bg: 'bg-orange-50',
+  shipper: {
+    primary: 'from-orange-500 via-amber-500 to-yellow-500',
+    bg: 'bg-gradient-to-br from-orange-50 to-amber-50',
     text: 'text-orange-600',
-    hover: 'hover:bg-orange-100',
-    active: 'bg-orange-100 text-orange-700',
+    hover: 'hover:bg-gradient-to-r hover:from-orange-100 hover:to-amber-100 transition-all duration-300',
+    active: 'bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700 shadow-md',
+    badge: 'bg-orange-500',
+    ring: 'focus:ring-orange-500',
   },
   merchant: {
-    primary: 'from-blue-700 to-indigo-800',
-    bg: 'bg-blue-50',
+    primary: 'from-blue-600 via-indigo-600 to-purple-600',
+    bg: 'bg-gradient-to-br from-blue-50 to-indigo-50',
     text: 'text-blue-700',
-    hover: 'hover:bg-blue-100',
-    active: 'bg-blue-100 text-blue-800',
+    hover: 'hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 transition-all duration-300',
+    active: 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 shadow-md',
+    badge: 'bg-blue-600',
+    ring: 'focus:ring-blue-600',
   },
   admin: {
-    primary: 'from-purple-600 to-pink-600',
-    bg: 'bg-purple-50',
+    primary: 'from-purple-600 via-pink-600 to-rose-600',
+    bg: 'bg-gradient-to-br from-purple-50 to-pink-50',
     text: 'text-purple-600',
-    hover: 'hover:bg-purple-100',
-    active: 'bg-purple-100 text-purple-700',
+    hover: 'hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 transition-all duration-300',
+    active: 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 shadow-md',
+    badge: 'bg-purple-600',
+    ring: 'focus:ring-purple-600',
   },
 };
 
@@ -129,7 +137,7 @@ export default function DashboardLayout({ children, role, menuItems }: Dashboard
             </div>
 
             {/* Menu Items */}
-            <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
               {menuItems.map((item) => (
                 <Link
                   key={item.path}
@@ -214,7 +222,7 @@ export default function DashboardLayout({ children, role, menuItems }: Dashboard
 
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto custom-scrollbar">
                   <div className="p-4 border-b border-gray-200">
                     <h3 className="font-semibold text-gray-900">Notifications</h3>
                   </div>
@@ -288,7 +296,7 @@ export default function DashboardLayout({ children, role, menuItems }: Dashboard
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto custom-scrollbar p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

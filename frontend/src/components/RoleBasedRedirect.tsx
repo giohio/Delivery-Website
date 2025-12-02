@@ -20,8 +20,8 @@ export const RoleBasedRedirect = () => {
 
     // Redirect based on role
     const roleRoutes: Record<string, string> = {
-      customer: '/customer',
-      shipper: '/shipper',
+      customer: '/customer/dashboard',
+      shipper: '/shipper/dashboard',
       merchant: '/dashboard/merchant',
       admin: '/admin'
     };

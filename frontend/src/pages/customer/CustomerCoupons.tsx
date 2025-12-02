@@ -2,7 +2,6 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import {
   LayoutDashboard,
   Package,
-  PlusCircle,
   MapPin,
   Wallet,
   Gift,
@@ -13,12 +12,12 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { couponApi, Coupon } from '../../services/couponApi';
 
 const menuItems = [
   { path: '/customer/dashboard', icon: <LayoutDashboard />, label: 'Dashboard' },
   { path: '/customer/orders', icon: <Package />, label: 'My Orders' },
-  { path: '/customer/create-order', icon: <PlusCircle />, label: 'Create Order' },
   { path: '/customer/track-order', icon: <MapPin />, label: 'Track Order' },
   { path: '/customer/wallet', icon: <Wallet />, label: 'Wallet' },
   { path: '/customer/coupons', icon: <Gift />, label: 'Coupons' },
@@ -77,7 +76,25 @@ const mockCoupons = [
 ];
 
 export default function CustomerCoupons() {
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadCoupons();
+  }, []);
+
+  const loadCoupons = async () => {
+    try {
+      setLoading(true);
+      const response = await couponApi.getAvailableCoupons();
+      setCoupons(response.coupons || []);
+    } catch (err) {
+      console.error('Failed to load coupons:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -98,8 +115,17 @@ export default function CustomerCoupons() {
       : 'from-gray-400 to-gray-500';
   };
 
-  const activeCoupons = mockCoupons.filter(c => c.status === 'active');
-  const expiredCoupons = mockCoupons.filter(c => c.status === 'expired');
+  const activeCoupons = coupons.filter(c => {
+    const now = new Date();
+    const validTo = new Date(c.valid_to);
+    return c.is_active && validTo > now;
+  });
+  
+  const expiredCoupons = coupons.filter(c => {
+    const now = new Date();
+    const validTo = new Date(c.valid_to);
+    return !c.is_active || validTo <= now;
+  });
 
   return (
     <DashboardLayout role="customer" menuItems={menuItems}>
@@ -109,8 +135,20 @@ export default function CustomerCoupons() {
         <p className="text-gray-600 mt-1">Save money on your next delivery</p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+        </div>
+      ) : coupons.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+          <Gift className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">No coupons available</p>
+          <p className="text-gray-400 text-sm mt-2">Check back later for amazing deals!</p>
+        </div>
+      ) : (
+        <>
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="bg-gradient-to-r from-teal-500 to-cyan-600 rounded-xl p-6 text-white">
           <div className="flex items-center space-x-3 mb-2">
             <Gift className="w-8 h-8" />
@@ -150,32 +188,32 @@ export default function CustomerCoupons() {
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Available Coupons</h2>
         <div className="grid md:grid-cols-2 gap-6">
-          {activeCoupons.map((coupon) => (
+          {activeCoupons.map((c) => (
             <div
-              key={coupon.id}
+              key={c.coupon_id}
               className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
             >
-              <div className={`bg-gradient-to-r ${getCouponColor(coupon.status)} p-6 text-white`}>
+              <div className={`bg-gradient-to-r ${getCouponColor(c.is_active ? 'active' : 'expired')} p-6 text-white`}>
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-bold mb-1">{coupon.title}</h3>
-                    <p className="text-sm text-white/80">{coupon.description}</p>
+                    <h3 className="text-xl font-bold mb-1">{c.code}</h3>
+                    <p className="text-sm text-white/80">{c.description}</p>
                   </div>
                   <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold">
-                    {coupon.type === 'percentage'
-                      ? `${coupon.discount}%`
-                      : formatCurrency(coupon.discount)}
+                    {c.discount_type === 'percentage'
+                      ? `${c.discount_value}%`
+                      : `${Number(c.discount_value).toLocaleString('vi-VN')}₫`}
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-lg p-3">
                   <Tag className="w-5 h-5" />
-                  <span className="font-mono font-bold text-lg">{coupon.code}</span>
+                  <span className="font-mono font-bold text-lg">{c.code}</span>
                   <button
-                    onClick={() => handleCopyCode(coupon.code)}
+                    onClick={() => handleCopyCode(c.code)}
                     className="ml-auto bg-white text-teal-600 px-4 py-1 rounded-lg text-sm font-semibold hover:bg-teal-50 transition-colors flex items-center space-x-1"
                   >
-                    {copiedCode === coupon.code ? (
+                    {copiedCode === c.code ? (
                       <>
                         <Check className="w-4 h-4" />
                         <span>Copied!</span>
@@ -194,15 +232,17 @@ export default function CustomerCoupons() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Min. Order:</span>
                   <span className="font-semibold text-gray-900">
-                    {coupon.minOrder > 0 ? formatCurrency(coupon.minOrder) : 'No minimum'}
+                    {Number(c.min_order_value) > 0 
+                      ? `${Number(c.min_order_value).toLocaleString('vi-VN')}₫` 
+                      : 'No minimum'}
                   </span>
                 </div>
 
-                {coupon.maxDiscount && (
+                {c.max_discount && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Max. Discount:</span>
                     <span className="font-semibold text-gray-900">
-                      {formatCurrency(coupon.maxDiscount)}
+                      {Number(c.max_discount).toLocaleString('vi-VN')}₫
                     </span>
                   </div>
                 )}
@@ -213,7 +253,11 @@ export default function CustomerCoupons() {
                     <span>Expires:</span>
                   </div>
                   <span className="font-semibold text-gray-900">
-                    {new Date(coupon.expiresAt).toLocaleDateString('vi-VN')}
+                    {new Date(c.valid_to).toLocaleDateString('vi-VN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
                   </span>
                 </div>
 
@@ -231,16 +275,16 @@ export default function CustomerCoupons() {
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Expired Coupons</h2>
           <div className="grid md:grid-cols-2 gap-6">
-            {expiredCoupons.map((coupon) => (
+            {expiredCoupons.map((c) => (
               <div
-                key={coupon.id}
+                key={c.coupon_id}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden opacity-60"
               >
-                <div className={`bg-gradient-to-r ${getCouponColor(coupon.status)} p-6 text-white`}>
+                <div className={`bg-gradient-to-r ${getCouponColor('expired')} p-6 text-white`}>
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="text-xl font-bold mb-1">{coupon.title}</h3>
-                      <p className="text-sm text-white/80">{coupon.description}</p>
+                      <h3 className="text-xl font-bold mb-1">{c.code}</h3>
+                      <p className="text-sm text-white/80">{c.description}</p>
                     </div>
                     <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold">
                       Expired
@@ -249,19 +293,25 @@ export default function CustomerCoupons() {
 
                   <div className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-lg p-3">
                     <Tag className="w-5 h-5" />
-                    <span className="font-mono font-bold text-lg">{coupon.code}</span>
+                    <span className="font-mono font-bold text-lg">{c.code}</span>
                   </div>
                 </div>
 
                 <div className="p-6">
                   <p className="text-center text-gray-500">
-                    This coupon expired on {new Date(coupon.expiresAt).toLocaleDateString('vi-VN')}
+                    This coupon expired on {new Date(c.valid_to).toLocaleDateString('vi-VN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
                   </p>
                 </div>
               </div>
             ))}
           </div>
         </div>
+      )}
+      </>
       )}
 
       {/* How to Use */}

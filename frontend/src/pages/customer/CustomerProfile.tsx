@@ -2,12 +2,10 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import {
   LayoutDashboard,
   Package,
-  PlusCircle,
   MapPin,
   Wallet,
   Gift,
   User,
-  Camera,
   Mail,
   Phone,
   Calendar,
@@ -17,11 +15,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { userApi } from '../../services/userApi';
 import { ProfileModal } from '../../components/customer/ProfileModal';
 import { ChangePasswordModal } from '../../components/customer/ChangePasswordModal';
+import ImageUploader from '../../components/common/ImageUploader';
+import uploadApi from '../../services/uploadApi';
 
 const menuItems = [
   { path: '/customer/dashboard', icon: <LayoutDashboard />, label: 'Dashboard' },
   { path: '/customer/orders', icon: <Package />, label: 'My Orders' },
-  { path: '/customer/create-order', icon: <PlusCircle />, label: 'Create Order' },
   { path: '/customer/track-order', icon: <MapPin />, label: 'Track Order' },
   { path: '/customer/wallet', icon: <Wallet />, label: 'Wallet' },
   { path: '/customer/coupons', icon: <Gift />, label: 'Coupons' },
@@ -34,6 +33,7 @@ export default function CustomerProfile() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showAvatarUpload, setShowAvatarUpload] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -51,8 +51,24 @@ export default function CustomerProfile() {
     }
   };
 
-  const handleAvatarUpload = () => {
-    alert('Avatar upload will be implemented with file upload system');
+  const handleAvatarUpload = async (file: File): Promise<string> => {
+    try {
+      const avatarUrl = await uploadApi.uploadAvatar(file);
+      // Update user profile with new avatar
+      await userApi.updateProfile({ 
+        fullName: userProfile?.full_name || '',
+        phone: userProfile?.phone || undefined,
+        avatar: avatarUrl 
+      });
+      await loadProfile();
+      setShowAvatarUpload(false);
+      alert('Cập nhật ảnh đại diện thành công!');
+      return avatarUrl;
+    } catch (error: any) {
+      console.error('Avatar upload failed:', error);
+      alert('Upload ảnh thất bại: ' + (error.message || 'Unknown error'));
+      throw error;
+    }
   };
 
   return (
@@ -75,14 +91,22 @@ export default function CustomerProfile() {
             <div className="relative h-32 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-t-xl">
               <div className="absolute -bottom-16 left-8">
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center justify-center text-white text-4xl font-bold border-4 border-white shadow-lg">
-                    {userProfile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
-                  </div>
+                  {userProfile?.avatar ? (
+                    <img
+                      src={userProfile.avatar}
+                      alt="Avatar"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-gradient-to-r from-teal-400 to-cyan-500 flex items-center justify-center text-white text-4xl font-bold border-4 border-white shadow-lg">
+                      {userProfile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                    </div>
+                  )}
                   <button
-                    onClick={handleAvatarUpload}
-                    className="absolute bottom-0 right-0 bg-teal-600 text-white p-2 rounded-full hover:bg-teal-700 shadow-lg"
+                    onClick={() => setShowAvatarUpload(true)}
+                    className="absolute bottom-0 right-0 bg-teal-600 text-white p-3 rounded-full hover:bg-teal-700 shadow-lg transition-colors"
                   >
-                    <Camera className="w-5 h-5" />
+                    <User className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -255,6 +279,7 @@ export default function CustomerProfile() {
             setShowProfileModal(false);
             loadProfile();
           }}
+          userProfile={userProfile}
         />
       )}
 
@@ -263,6 +288,36 @@ export default function CustomerProfile() {
           onClose={() => setShowPasswordModal(false)}
           onSuccess={() => setShowPasswordModal(false)}
         />
+      )}
+      
+      {/* Avatar Upload Modal */}
+      {showAvatarUpload && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Update Avatar</h3>
+              <button
+                onClick={() => setShowAvatarUpload(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ×
+              </button>
+            </div>
+            <ImageUploader
+              label="Profile Picture"
+              currentImage={userProfile?.avatar}
+              onUpload={handleAvatarUpload}
+              aspectRatio="1/1"
+              maxSizeMB={2}
+            />
+            <button
+              onClick={() => setShowAvatarUpload(false)}
+              className="mt-4 w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </DashboardLayout>
   );
