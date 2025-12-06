@@ -10,7 +10,7 @@ class UploadApi {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (!token) {
       throw new Error('Authentication required');
     }

@@ -49,9 +49,14 @@ const ShipperDeliveries: React.FC = () => {
   const [showMap, setShowMap] = useState<number | null>(null);
   const [stats, setStats] = useState({
     total: 0,
-    inTransit: 0,
-    delivered: 0,
-    failed: 0,
+    assigned: 0,
+    ongoing: 0,
+    completed: 0,
+    canceled: 0,
+    totalEarnings: 0,
+    totalDistance: 0,
+    totalOrders: 0,
+    avgOrdersPerDelivery: 0
   });
 
   const menuItems = [
@@ -107,11 +112,22 @@ const ShipperDeliveries: React.FC = () => {
       setDeliveries(deliveriesWithOrders);
 
       // Calculate stats
+      const totalOrdersCount = deliveriesWithOrders.reduce((sum, d) => sum + (d.orders?.length || 0), 0);
       const statsData = {
         total: deliveriesWithOrders.length,
-        inTransit: deliveriesWithOrders.filter(d => d.status === 'in_transit' || d.status === 'picked_up').length,
-        delivered: deliveriesWithOrders.filter(d => d.status === 'delivered').length,
-        failed: deliveriesWithOrders.filter(d => d.status === 'failed').length,
+        assigned: deliveriesWithOrders.filter(d => d.status === 'ASSIGNED').length,
+        ongoing: deliveriesWithOrders.filter(d => d.status === 'ONGOING').length,
+        completed: deliveriesWithOrders.filter(d => d.status === 'COMPLETED').length,
+        canceled: deliveriesWithOrders.filter(d => d.status === 'CANCELED').length,
+        totalEarnings: deliveriesWithOrders
+          .filter(d => d.status === 'COMPLETED')
+          .reduce((sum, d) => sum + (Number(d.courier_fee) || 0), 0),
+        totalDistance: deliveriesWithOrders.reduce((sum, d) => {
+          const deliveryDistance = d.orders?.reduce((orderSum, o) => orderSum + (Number(o.distance_km) || 0), 0) || 0;
+          return sum + deliveryDistance;
+        }, 0),
+        totalOrders: totalOrdersCount,
+        avgOrdersPerDelivery: deliveriesWithOrders.length > 0 ? totalOrdersCount / deliveriesWithOrders.length : 0
       };
       setStats(statsData);
       console.log('[ShipperDeliveries] Stats:', statsData);
@@ -135,7 +151,7 @@ const ShipperDeliveries: React.FC = () => {
         if (filter === 'in_transit') return d.status === 'ONGOING' || d.status === 'ASSIGNED';
         if (filter === 'delivered') return d.status === 'COMPLETED';
         if (filter === 'failed') return d.status === 'CANCELED';
-        return d.status === filter;
+        return d.status?.toUpperCase() === filter.toUpperCase();
       });
       setFilteredDeliveries(filtered);
     }
@@ -225,43 +241,55 @@ const ShipperDeliveries: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Total Deliveries */}
           <div className="bg-gradient-to-br from-orange-500 to-amber-600 rounded-xl p-6 text-white shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-sm font-medium">Total Deliveries</p>
                 <p className="text-3xl font-bold mt-2">{stats.total}</p>
+                <div className="flex items-center space-x-2 mt-3 text-sm">
+                  <span className="bg-orange-400/30 px-2 py-0.5 rounded">✓ {stats.completed}</span>
+                  <span className="bg-orange-400/30 px-2 py-0.5 rounded">⏳ {stats.ongoing}</span>
+                  <span className="bg-orange-400/30 px-2 py-0.5 rounded">📦 {stats.assigned}</span>
+                </div>
               </div>
-              <Package className="w-8 h-8 opacity-80" />
+              <Package className="w-12 h-12 opacity-80" />
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-400 to-amber-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">In Transit</p>
-                <p className="text-3xl font-bold mt-2">{stats.inTransit}</p>
-              </div>
-              <Navigation className="w-8 h-8 opacity-80" />
-            </div>
-          </div>
-
+          {/* Total Earnings */}
           <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-100 text-sm font-medium">Delivered</p>
-                <p className="text-3xl font-bold mt-2">{stats.delivered}</p>
+                <p className="text-emerald-100 text-sm font-medium">Total Earnings</p>
+                <p className="text-3xl font-bold mt-2">{stats.totalEarnings.toLocaleString('vi-VN')}₫</p>
+                <p className="text-emerald-100 text-xs mt-3">From {stats.completed} completed deliveries</p>
               </div>
-              <Package className="w-8 h-8 opacity-80" />
+              <DollarSign className="w-12 h-12 opacity-80" />
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-red-500 to-rose-600 rounded-xl p-6 text-white shadow-lg">
+          {/* Total Distance */}
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-100 text-sm font-medium">Failed</p>
-                <p className="text-3xl font-bold mt-2">{stats.failed}</p>
+                <p className="text-blue-100 text-sm font-medium">Total Distance</p>
+                <p className="text-3xl font-bold mt-2">{stats.totalDistance.toFixed(1)} km</p>
+                <p className="text-blue-100 text-xs mt-3">Across all deliveries</p>
               </div>
-              <Package className="w-8 h-8 opacity-80" />
+              <Navigation className="w-12 h-12 opacity-80" />
+            </div>
+          </div>
+
+          {/* Total Orders */}
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Total Orders</p>
+                <p className="text-3xl font-bold mt-2">{stats.totalOrders}</p>
+                <p className="text-purple-100 text-xs mt-3">Avg {stats.avgOrdersPerDelivery.toFixed(1)} per delivery</p>
+              </div>
+              <Package className="w-12 h-12 opacity-80" />
             </div>
           </div>
         </div>

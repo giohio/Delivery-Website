@@ -100,7 +100,7 @@ def validate_coupon(current_user):
         
         # Calculate discount
         if coupon['discount_type'] == 'percentage':
-            discount = (order_amount * coupon['discount_value']) / 100
+            discount = (order_amount * float(coupon['discount_value'])) / 100
             if coupon['max_discount']:
                 discount = min(discount, float(coupon['max_discount']))
         else:  # fixed
@@ -112,8 +112,8 @@ def validate_coupon(current_user):
         return jsonify({
             "ok": True,
             "valid": True,
-            "discount": discount,
-            "final_amount": order_amount - discount,
+            "discount": round(discount, 2),
+            "final_amount": round(order_amount - discount, 2),
             "message": "Coupon is valid"
         }), 200
         

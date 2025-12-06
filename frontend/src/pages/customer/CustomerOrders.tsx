@@ -38,6 +38,17 @@ export default function CustomerOrders() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pending: 0,
+    ongoing: 0,
+    completed: 0,
+    canceled: 0,
+    totalSpent: 0,
+    totalDistance: 0,
+    walletPayments: 0,
+    cashPayments: 0
+  });
   
   // Modals
   const [showCreateOrderModal, setShowCreateOrderModal] = useState(false);
@@ -57,7 +68,25 @@ export default function CustomerOrders() {
     try {
       setLoading(true);
       const response = await orderApi.getMyOrders();
-      setOrders(response.orders || []);
+      const ordersData = response.orders || [];
+      setOrders(ordersData);
+      
+      // Calculate statistics
+      const statistics = {
+        totalOrders: ordersData.length,
+        pending: ordersData.filter((o: any) => o.status === 'PENDING').length,
+        ongoing: ordersData.filter((o: any) => o.status === 'ONGOING' || o.status === 'ASSIGNED').length,
+        completed: ordersData.filter((o: any) => o.status === 'COMPLETED').length,
+        canceled: ordersData.filter((o: any) => o.status === 'CANCELED').length,
+        totalSpent: ordersData
+          .filter((o: any) => o.status === 'COMPLETED')
+          .reduce((sum: number, o: any) => sum + (Number(o.price_estimate) || 0), 0),
+        totalDistance: ordersData
+          .reduce((sum: number, o: any) => sum + (Number(o.distance_km) || 0), 0),
+        walletPayments: ordersData.filter((o: any) => o.payment_method === 'wallet').length,
+        cashPayments: ordersData.filter((o: any) => o.payment_method === 'cash').length
+      };
+      setStats(statistics);
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
@@ -74,15 +103,82 @@ export default function CustomerOrders() {
     }
 
     // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(order => 
-        order.order_id.toString().includes(searchTerm) ||
-        order.pickup_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.delivery_address?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      const searchNum = searchTerm.trim();
+      
+      filtered = filtered.filter(order => {
+        // Check if search term is a number (for exact ID match)
+        if (/^\d+$/.test(searchNum)) {
+          // Exact match for order ID
+          return order.order_id.toString() === searchNum;
+        }
+        
+        // Text search in addresses
+        return order.pickup_address?.toLowerCase().includes(searchLower) ||
+               order.delivery_address?.toLowerCase().includes(searchLower);
+      });
     }
 
     setFilteredOrders(filtered);
+  };
+
+  const exportToCSV = () => {
+    try {
+      // Prepare CSV headers
+      const headers = [
+        'Order ID',
+        'Status',
+        'Pickup Address',
+        'Delivery Address',
+        'Distance (km)',
+        'Price (VND)',
+        'Payment Method',
+        'Service Type',
+        'Package Size',
+        'Created At',
+        'Completed At'
+      ];
+
+      // Prepare CSV rows
+      const rows = filteredOrders.map(order => [
+        order.order_id,
+        order.status,
+        order.pickup_address,
+        order.delivery_address,
+        order.distance_km || 0,
+        order.price_estimate || 0,
+        order.payment_method || 'N/A',
+        order.service_type || 'N/A',
+        order.package_size || 'N/A',
+        order.created_at ? new Date(order.created_at).toLocaleString('vi-VN') : 'N/A',
+        order.completed_at ? new Date(order.completed_at).toLocaleString('vi-VN') : 'N/A'
+      ]);
+
+      // Combine headers and rows
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Create blob and download
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `orders_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`Exported ${filteredOrders.length} orders to CSV successfully!`);
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      alert('Failed to export CSV');
+    }
   };
 
   const handleCancelOrder = async (orderId: number) => {
@@ -189,35 +285,107 @@ export default function CustomerOrders() {
           </div>
 
           {/* Export Button */}
-          <button className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+          <button 
+            onClick={exportToCSV}
+            disabled={filteredOrders.length === 0}
+            className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
             <Download className="w-5 h-5" />
-            <span>Export CSV</span>
+            <span>Export CSV ({filteredOrders.length})</span>
           </button>
         </div>
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        {['ALL', 'PENDING', 'ONGOING', 'COMPLETED', 'CANCELED'].map((status) => {
-          const count = status === 'ALL' 
-            ? orders.length 
-            : orders.filter(o => o.status === status).length;
-          
-          return (
+      {/* Stats Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {/* Total Orders */}
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100 text-sm font-medium">Total Orders</p>
+              <p className="text-3xl font-bold mt-2">{stats.totalOrders}</p>
+              <div className="flex items-center space-x-2 mt-3 text-sm">
+                <span className="bg-blue-400/30 px-2 py-0.5 rounded">✓ {stats.completed}</span>
+                <span className="bg-blue-400/30 px-2 py-0.5 rounded">⏳ {stats.ongoing}</span>
+                <span className="bg-blue-400/30 px-2 py-0.5 rounded">⚠ {stats.pending}</span>
+              </div>
+            </div>
+            <Package className="w-12 h-12 opacity-80" />
+          </div>
+        </div>
+
+        {/* Total Spent */}
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-emerald-100 text-sm font-medium">Total Spent</p>
+              <p className="text-3xl font-bold mt-2">{formatCurrency(stats.totalSpent)}</p>
+              <p className="text-emerald-100 text-xs mt-3">From {stats.completed} completed orders</p>
+            </div>
+            <Wallet className="w-12 h-12 opacity-80" />
+          </div>
+        </div>
+
+        {/* Total Distance */}
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-100 text-sm font-medium">Total Distance</p>
+              <p className="text-3xl font-bold mt-2">{stats.totalDistance.toFixed(1)} km</p>
+              <p className="text-purple-100 text-xs mt-3">Across all deliveries</p>
+            </div>
+            <MapPin className="w-12 h-12 opacity-80" />
+          </div>
+        </div>
+
+        {/* Payment Methods */}
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-orange-100 text-sm font-medium">Payment Split</p>
+              <div className="flex items-center space-x-3 mt-2">
+                <div>
+                  <p className="text-2xl font-bold">{stats.walletPayments}</p>
+                  <p className="text-orange-100 text-xs">Wallet</p>
+                </div>
+                <div className="text-orange-200 text-2xl">/</div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.cashPayments}</p>
+                  <p className="text-orange-100 text-xs">Cash</p>
+                </div>
+              </div>
+            </div>
+            <CreditCard className="w-12 h-12 opacity-80" />
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Status Filter */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+        <div className="flex items-center space-x-2 overflow-x-auto">
+          {[
+            { status: 'ALL', label: 'All Orders', count: stats.totalOrders, color: 'gray' },
+            { status: 'PENDING', label: 'Pending', count: stats.pending, color: 'yellow' },
+            { status: 'ONGOING', label: 'In Transit', count: stats.ongoing, color: 'blue' },
+            { status: 'COMPLETED', label: 'Completed', count: stats.completed, color: 'green' },
+            { status: 'CANCELED', label: 'Canceled', count: stats.canceled, color: 'red' }
+          ].map((item) => (
             <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`p-4 rounded-lg border-2 transition-all ${
-                statusFilter === status
-                  ? 'border-teal-500 bg-teal-50'
+              key={item.status}
+              onClick={() => setStatusFilter(item.status)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg border-2 transition-all whitespace-nowrap ${
+                statusFilter === item.status
+                  ? `border-${item.color}-500 bg-${item.color}-50`
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <div className="text-2xl font-bold text-gray-900">{count}</div>
-              <div className="text-sm text-gray-600 mt-1">{status}</div>
+              <span className={`text-lg font-bold ${
+                statusFilter === item.status ? `text-${item.color}-600` : 'text-gray-900'
+              }`}>{item.count}</span>
+              <span className="text-sm text-gray-600">{item.label}</span>
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
       {/* Orders List */}

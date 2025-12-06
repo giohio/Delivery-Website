@@ -18,6 +18,8 @@ from routes.courier import courier_bp
 from routes.upload import upload_bp
 from routes.coupons import coupons_bp
 from routes.payment_webhook import payment_webhook_bp
+from routes.api_keys import api_keys_bp
+from routes.external_api import external_api_bp
 from routes import register_routes
 
 load_dotenv(override=True)
@@ -40,6 +42,8 @@ app.register_blueprint(courier_bp)
 app.register_blueprint(upload_bp)
 app.register_blueprint(coupons_bp, url_prefix='/api')
 app.register_blueprint(payment_webhook_bp, url_prefix='/api')
+app.register_blueprint(api_keys_bp)
+app.register_blueprint(external_api_bp)
 
 # Register health and db check routes
 register_routes(app)

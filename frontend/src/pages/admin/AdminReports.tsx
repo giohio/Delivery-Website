@@ -17,36 +17,109 @@ export default function AdminReports() {
     { path: '/admin/reports', icon: <BarChart3 className="w-5 h-5" />, label: 'Reports' },
   ];
 
-  // Revenue by day
+  // Revenue by day (VND)
   const revenueData = [
-    { date: '07/11', revenue: 15000000, orders: 120, shippers: 15 },
-    { date: '08/11', revenue: 18000000, orders: 145, shippers: 18 },
-    { date: '09/11', revenue: 16500000, orders: 132, shippers: 16 },
-    { date: '10/11', revenue: 20000000, orders: 160, shippers: 19 },
-    { date: '11/11', revenue: 22000000, orders: 175, shippers: 20 },
-    { date: '12/11', revenue: 25000000, orders: 198, shippers: 22 },
-    { date: '13/11', revenue: 19500000, orders: 156, shippers: 18 },
+    { date: '07/11', revenue: 1200000, orders: 120, shippers: 15 },
+    { date: '08/11', revenue: 1450000, orders: 145, shippers: 18 },
+    { date: '09/11', revenue: 1320000, orders: 132, shippers: 16 },
+    { date: '10/11', revenue: 1600000, orders: 160, shippers: 19 },
+    { date: '11/11', revenue: 1750000, orders: 175, shippers: 20 },
+    { date: '12/11', revenue: 2000000, orders: 198, shippers: 22 },
+    { date: '13/11', revenue: 1560000, orders: 156, shippers: 18 },
   ];
 
-  // Orders by category
+  // Orders by category (VND)
   const categoryData = [
-    { category: 'Food', orders: 450, revenue: 45000000 },
-    { category: 'Documents', orders: 320, revenue: 12800000 },
-    { category: 'Packages', orders: 280, revenue: 35600000 },
-    { category: 'Groceries', orders: 184, revenue: 29440000 },
+    { category: 'Food', orders: 450, revenue: 4500000 },
+    { category: 'Documents', orders: 320, revenue: 1280000 },
+    { category: 'Packages', orders: 280, revenue: 3560000 },
+    { category: 'Groceries', orders: 184, revenue: 2944000 },
   ];
 
-  // Top performing shippers
+  // Top performing shippers (VND)
   const topShippers = [
-    { name: 'Trần Thị B', deliveries: 156, revenue: 12500000, rating: 4.9 },
-    { name: 'Phạm Văn D', deliveries: 142, revenue: 11800000, rating: 4.8 },
-    { name: 'Nguyễn Văn G', deliveries: 138, revenue: 11200000, rating: 4.9 },
-    { name: 'Lê Văn C', deliveries: 125, revenue: 10500000, rating: 4.7 },
-    { name: 'Hoàng Thị E', deliveries: 118, revenue: 9800000, rating: 4.6 },
+    { name: 'Trần Thị B', deliveries: 156, revenue: 1250000, rating: 4.9 },
+    { name: 'Phạm Văn D', deliveries: 142, revenue: 1180000, rating: 4.8 },
+    { name: 'Nguyễn Văn G', deliveries: 138, revenue: 1120000, rating: 4.9 },
+    { name: 'Lê Văn C', deliveries: 125, revenue: 1050000, rating: 4.7 },
+    { name: 'Hoàng Thị E', deliveries: 118, revenue: 980000, rating: 4.6 },
   ];
 
   const exportReport = () => {
-    alert('Export functionality will be implemented with backend API');
+    try {
+      // Get report data based on report type
+      let reportData: any[] = [];
+      let headers: string[] = [];
+      let filename = '';
+
+      switch (reportType) {
+        case 'revenue':
+          headers = ['Date', 'Revenue (VND)', 'Orders', 'Shippers'];
+          reportData = revenueData.map(d => [
+            d.date,
+            d.revenue,
+            d.orders,
+            d.shippers
+          ]);
+          filename = `revenue_report_${dateRange}`;
+          break;
+        
+        case 'orders':
+          headers = ['Category', 'Orders', 'Revenue (VND)'];
+          reportData = categoryData.map(d => [
+            d.category,
+            d.orders,
+            d.revenue
+          ]);
+          filename = `orders_report_${dateRange}`;
+          break;
+        
+        case 'shippers':
+          headers = ['Shipper Name', 'Deliveries', 'Revenue (VND)', 'Rating'];
+          reportData = topShippers.map(d => [
+            d.name,
+            d.deliveries,
+            d.revenue,
+            d.rating
+          ]);
+          filename = `shippers_report_${dateRange}`;
+          break;
+        
+        default:
+          headers = ['Date', 'Revenue (VND)', 'Orders', 'Shippers'];
+          reportData = revenueData.map(d => [
+            d.date,
+            d.revenue,
+            d.orders,
+            d.shippers
+          ]);
+          filename = `report_${dateRange}`;
+      }
+
+      // Create CSV content
+      const csvContent = [
+        headers.join(','),
+        ...reportData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Add BOM for UTF-8 encoding (for Excel to display Vietnamese correctly)
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert(`✅ Report exported successfully: ${filename}.csv`);
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      alert('❌ Failed to export report');
+    }
   };
 
   return (
@@ -121,7 +194,9 @@ export default function AdminReports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium">Total Revenue</p>
-                <h3 className="text-3xl font-bold mt-2">136M₫</h3>
+                <h3 className="text-3xl font-bold mt-2">
+                  {revenueData.reduce((sum, day) => sum + day.revenue, 0).toLocaleString('vi-VN')}₫
+                </h3>
                 <p className="text-purple-100 text-sm mt-2 flex items-center">
                   <TrendingUp className="w-4 h-4 mr-1" />
                   +12.5% vs last week
@@ -135,7 +210,9 @@ export default function AdminReports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium">Total Orders</p>
-                <h3 className="text-3xl font-bold mt-2">1,086</h3>
+                <h3 className="text-3xl font-bold mt-2">
+                  {revenueData.reduce((sum, day) => sum + day.orders, 0).toLocaleString('vi-VN')}
+                </h3>
                 <p className="text-blue-100 text-sm mt-2 flex items-center">
                   <TrendingUp className="w-4 h-4 mr-1" />
                   +8.3% vs last week
@@ -160,7 +237,9 @@ export default function AdminReports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-sm font-medium">Avg. Order Value</p>
-                <h3 className="text-3xl font-bold mt-2">125K₫</h3>
+                <h3 className="text-3xl font-bold mt-2">
+                  {(revenueData.reduce((sum, day) => sum + day.revenue, 0) / revenueData.reduce((sum, day) => sum + day.orders, 0)).toLocaleString('vi-VN', { maximumFractionDigits: 0 })}₫
+                </h3>
                 <p className="text-green-100 text-sm mt-2 flex items-center">
                   <TrendingUp className="w-4 h-4 mr-1" />
                   +5.2% vs last week
@@ -180,14 +259,17 @@ export default function AdminReports() {
               <LineChart data={revenueData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="date" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
+                <YAxis 
+                  stroke="#6b7280" 
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                   }}
-                  formatter={(value: number) => `${value.toLocaleString()}₫`}
+                  formatter={(value: number) => `${value.toLocaleString('vi-VN')}₫`}
                 />
                 <Legend />
                 <Line
@@ -263,7 +345,7 @@ export default function AdminReports() {
                     </td>
                     <td className="py-4 px-4 text-right">
                       <span className="text-gray-900 font-semibold">
-                        {shipper.revenue.toLocaleString()}₫
+                        {shipper.revenue.toLocaleString('vi-VN')}₫
                       </span>
                     </td>
                   </tr>

@@ -57,32 +57,28 @@ const ShipperEarnings: React.FC = () => {
       const allTransactions = transactionsResponse.transactions || [];
       setTransactions(allTransactions);
 
-      // Load deliveries for stats
-      const deliveriesResponse = await deliveryApi.getMyDeliveries();
-      const deliveries = deliveriesResponse.deliveries || [];
-      const completedDeliveries = deliveries.filter((d: any) => d.status === 'delivered');
-
-      // Calculate stats
-      const totalEarnings = completedDeliveries.reduce((sum: number, d: any) => sum + (d.courier_fee || 0), 0);
+      // Calculate stats from CREDIT transactions (earnings)
+      const creditTransactions = allTransactions.filter((t: any) => t.type === 'CREDIT');
+      const totalEarnings = creditTransactions.reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0);
       
       const now = new Date();
       const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
-      const thisMonthEarnings = completedDeliveries
-        .filter((d: any) => new Date(d.created_at) >= thisMonthStart)
-        .reduce((sum: number, d: any) => sum + (d.courier_fee || 0), 0);
+      const thisMonthEarnings = creditTransactions
+        .filter((t: any) => new Date(t.created_at) >= thisMonthStart)
+        .reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0);
 
-      const lastMonthEarnings = completedDeliveries
-        .filter((d: any) => {
-          const date = new Date(d.created_at);
+      const lastMonthEarnings = creditTransactions
+        .filter((t: any) => {
+          const date = new Date(t.created_at);
           return date >= lastMonthStart && date <= lastMonthEnd;
         })
-        .reduce((sum: number, d: any) => sum + (d.courier_fee || 0), 0);
+        .reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0);
 
-      const avgPerDelivery = completedDeliveries.length > 0 
-        ? totalEarnings / completedDeliveries.length 
+      const avgPerDelivery = creditTransactions.length > 0 
+        ? totalEarnings / creditTransactions.length 
         : 0;
 
       setStats({
@@ -92,7 +88,7 @@ const ShipperEarnings: React.FC = () => {
         avgPerDelivery,
       });
 
-      // Earnings chart data (last 30 days)
+      // Earnings chart data from transactions (last 30 days)
       const last30Days = Array.from({ length: 30 }, (_, i) => {
         const date = new Date();
         date.setDate(date.getDate() - (29 - i));
@@ -100,10 +96,10 @@ const ShipperEarnings: React.FC = () => {
       });
 
       const earningsMap = new Map();
-      completedDeliveries.forEach((d: any) => {
-        const date = new Date(d.created_at).toISOString().split('T')[0];
+      creditTransactions.forEach((t: any) => {
+        const date = new Date(t.created_at).toISOString().split('T')[0];
         if (last30Days.includes(date)) {
-          earningsMap.set(date, (earningsMap.get(date) || 0) + (d.courier_fee || 0));
+          earningsMap.set(date, (earningsMap.get(date) || 0) + parseFloat(t.amount));
         }
       });
 

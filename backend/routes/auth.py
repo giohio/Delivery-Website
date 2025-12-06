@@ -102,6 +102,26 @@ def register():
             (username, pwd_hash, email, phone, full_name, role_id)
         )
         row = cur.fetchone()
+        user_id = row['user_id']
+        
+        # If customer, create wallet with initial balance
+        if role == 'customer':
+            cur.execute("""
+                INSERT INTO app.wallets (user_id, balance)
+                VALUES (%s, 0)
+                ON CONFLICT (user_id) DO NOTHING;
+            """, (user_id,))
+            print(f"[Register] Created wallet for customer user_id={user_id}")
+        
+        # If shipper, create shipper wallet
+        elif role == 'shipper':
+            cur.execute("""
+                INSERT INTO app.shipper_wallets (shipper_id, balance)
+                VALUES (%s, 0)
+                ON CONFLICT (shipper_id) DO NOTHING;
+            """, (user_id,))
+            print(f"[Register] Created shipper wallet for user_id={user_id}")
+        
         conn.commit()
         return jsonify({"ok": True, "user": row}), 201
     except Exception as e:

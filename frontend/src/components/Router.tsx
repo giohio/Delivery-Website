@@ -6,6 +6,7 @@ import HomePage from './HomePage';
 import Login from '../pages/Login';
 import ShipperDashboard from '../pages/ShipperDashboardModern';
 import MerchantDashboard from '../pages/MerchantDashboardNew';
+import MerchantSettings from '../pages/merchant/MerchantSettings';
 import { AutoCustomerRoute } from './AutoCustomerRoute';
 
 import { MemberProtectedRoute } from '@/components/ui/member-protected-route';
@@ -18,6 +19,7 @@ import CustomerTrackOrder from '../pages/customer/CustomerTrackOrder';
 import CustomerWallet from '../pages/customer/CustomerWallet';
 import CustomerProfile from '../pages/customer/CustomerProfile';
 import CustomerCoupons from '../pages/customer/CustomerCoupons';
+import CustomerSettings from '../pages/customer/CustomerSettings';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -26,6 +28,7 @@ import AdminOrders from '../pages/admin/AdminOrders';
 import AdminCouriers from '../pages/admin/AdminCouriers';
 import AdminReports from '../pages/admin/AdminReports';
 import AdminKYCApproval from '../pages/admin/AdminKYCApproval';
+import AdminSettings from '../pages/admin/AdminSettings';
 
 // Shipper Pages (người giao hàng)
 import ShipperDashboardPage from '../pages/shipper/ShipperDashboard';
@@ -33,6 +36,7 @@ import ShipperAvailableOrdersPage from '../pages/shipper/ShipperAvailableOrdersP
 import ShipperDeliveriesPage from '../pages/shipper/ShipperDeliveries';
 import ShipperEarningsPage from '../pages/shipper/ShipperEarnings';
 import ShipperProfilePage from '../pages/shipper/ShipperProfile';
+import ShipperSettings from '../pages/shipper/ShipperSettings';
 
 // Layout component that includes ScrollToTop
 function Layout() {
@@ -112,7 +116,6 @@ const router = createBrowserRouter([
             <CustomerProfile />
           </MemberProtectedRoute>
         ),
-      },
       {
         path: "customer/coupons",
         element: (
@@ -120,6 +123,15 @@ const router = createBrowserRouter([
             <CustomerCoupons />
           </MemberProtectedRoute>
         ),
+      },
+      {
+        path: "customer/settings",
+        element: (
+          <MemberProtectedRoute allowedRoles={['customer']} messageToSignIn="Đăng nhập để truy cập trang khách hàng">
+            <CustomerSettings />
+          </MemberProtectedRoute>
+        ),
+      },),
       },
       // Old routes (backward compatibility)
       {
@@ -192,6 +204,14 @@ const router = createBrowserRouter([
         element: (
           <MemberProtectedRoute allowedRoles={['shipper']} messageToSignIn="Đăng nhập để truy cập trang shipper">
             <ShipperProfilePage />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "shipper/settings",
+        element: (
+          <MemberProtectedRoute allowedRoles={['shipper']} messageToSignIn="Đăng nhập để truy cập trang shipper">
+            <ShipperSettings />
           </MemberProtectedRoute>
         ),
       },
@@ -270,6 +290,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "merchant/settings",
+        element: (
+          <MemberProtectedRoute allowedRoles={['merchant']} messageToSignIn="Đăng nhập để truy cập trang merchant">
+            <MerchantSettings />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
         path: "admin",
         element: (
           <MemberProtectedRoute allowedRoles={['admin']} messageToSignIn="Đăng nhập để truy cập trang admin">
@@ -322,6 +350,14 @@ const router = createBrowserRouter([
         element: (
           <MemberProtectedRoute allowedRoles={['admin']} messageToSignIn="Đăng nhập để truy cập trang admin">
             <AdminKYCApproval />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/settings",
+        element: (
+          <MemberProtectedRoute allowedRoles={['admin']} messageToSignIn="Đăng nhập để truy cập trang admin">
+            <AdminSettings />
           </MemberProtectedRoute>
         ),
       },

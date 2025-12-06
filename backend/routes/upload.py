@@ -63,11 +63,24 @@ def upload_avatar(current_user):
         if error:
             return jsonify({'error': error}), 400
         
-        # TODO: Update user avatar in database
-        # For now, just return the file path
+        # Update user avatar in database
+        from db import get_db_connection
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            UPDATE app.users
+            SET avatar = %s
+            WHERE user_id = %s
+        """, (file_path, current_user['user_id']))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
         
         return jsonify({
             'ok': True,
+            'file_url': file_path,
             'file_path': file_path,
             'message': 'Avatar uploaded successfully'
         }), 200

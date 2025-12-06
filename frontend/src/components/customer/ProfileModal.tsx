@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { userApi } from '../../services/userApi';
 import uploadApi from '../../services/uploadApi';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 interface ProfileModalProps {
   onClose: () => void;
   onSuccess: () => void;
@@ -100,7 +102,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose, onSuccess, 
           <div className="flex items-center space-x-4">
             <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
               {formData.avatar ? (
-                <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                <img 
+                  src={formData.avatar.startsWith('http') ? formData.avatar : `${API_URL}${formData.avatar}`} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover" 
+                />
               ) : (
                 <User className="w-10 h-10 text-gray-400" />
               )}

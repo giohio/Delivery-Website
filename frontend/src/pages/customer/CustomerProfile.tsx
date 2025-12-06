@@ -27,6 +27,8 @@ const menuItems = [
   { path: '/customer/profile', icon: <User />, label: 'Profile' },
 ];
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function CustomerProfile() {
   const { user } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -93,7 +95,7 @@ export default function CustomerProfile() {
                 <div className="relative">
                   {userProfile?.avatar ? (
                     <img
-                      src={userProfile.avatar}
+                      src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `${API_URL}${userProfile.avatar}`}
                       alt="Avatar"
                       className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
                     />
@@ -305,7 +307,7 @@ export default function CustomerProfile() {
             </div>
             <ImageUploader
               label="Profile Picture"
-              currentImage={userProfile?.avatar}
+              currentImage={userProfile?.avatar ? (userProfile.avatar.startsWith('http') ? userProfile.avatar : `${API_URL}${userProfile.avatar}`) : undefined}
               onUpload={handleAvatarUpload}
               aspectRatio="1/1"
               maxSizeMB={2}

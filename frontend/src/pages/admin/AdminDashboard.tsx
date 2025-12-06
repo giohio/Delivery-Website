@@ -5,7 +5,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 
 export default function AdminDashboard() {
   const [stats] = useState({
-    totalRevenue: 125000,
+    totalRevenue: 8913410, // VND
     totalOrders: 1234,
     activeUsers: 567,
     activeCouriers: 89,
@@ -15,15 +15,38 @@ export default function AdminDashboard() {
     orderGrowth: 8.3,
   });
 
-  // Revenue data for last 7 days
+  // Revenue data for December (30 days - VND)
   const revenueData = [
-    { name: 'Mon', revenue: 15000, orders: 120 },
-    { name: 'Tue', revenue: 18000, orders: 145 },
-    { name: 'Wed', revenue: 16500, orders: 132 },
-    { name: 'Thu', revenue: 20000, orders: 160 },
-    { name: 'Fri', revenue: 22000, orders: 175 },
-    { name: 'Sat', revenue: 25000, orders: 198 },
-    { name: 'Sun', revenue: 19500, orders: 156 },
+    { name: '1/12', revenue: 1200000, orders: 120 },
+    { name: '2/12', revenue: 1450000, orders: 145 },
+    { name: '3/12', revenue: 1320000, orders: 132 },
+    { name: '4/12', revenue: 1600000, orders: 160 },
+    { name: '5/12', revenue: 1750000, orders: 175 },
+    { name: '6/12', revenue: 2000000, orders: 198 },
+    { name: '7/12', revenue: 1560000, orders: 156 },
+    { name: '8/12', revenue: 1680000, orders: 168 },
+    { name: '9/12', revenue: 1920000, orders: 192 },
+    { name: '10/12', revenue: 1540000, orders: 154 },
+    { name: '11/12', revenue: 1780000, orders: 178 },
+    { name: '12/12', revenue: 1650000, orders: 165 },
+    { name: '13/12', revenue: 1850000, orders: 185 },
+    { name: '14/12', revenue: 2100000, orders: 210 },
+    { name: '15/12', revenue: 1890000, orders: 189 },
+    { name: '16/12', revenue: 1720000, orders: 172 },
+    { name: '17/12', revenue: 1960000, orders: 196 },
+    { name: '18/12', revenue: 2050000, orders: 205 },
+    { name: '19/12', revenue: 1830000, orders: 183 },
+    { name: '20/12', revenue: 1690000, orders: 169 },
+    { name: '21/12', revenue: 2150000, orders: 215 },
+    { name: '22/12', revenue: 1980000, orders: 198 },
+    { name: '23/12', revenue: 1760000, orders: 176 },
+    { name: '24/12', revenue: 2300000, orders: 230 },
+    { name: '25/12', revenue: 2500000, orders: 250 },
+    { name: '26/12', revenue: 2200000, orders: 220 },
+    { name: '27/12', revenue: 2100000, orders: 210 },
+    { name: '28/12', revenue: 1950000, orders: 195 },
+    { name: '29/12', revenue: 2350000, orders: 235 },
+    { name: '30/12', revenue: 2180000, orders: 218 },
   ];
 
   // Order status distribution
@@ -34,13 +57,13 @@ export default function AdminDashboard() {
     { name: 'Cancelled', value: 55, color: '#ef4444' },
   ];
 
-  // Top performers
+  // Top performers (VND)
   const topCouriers = [
-    { id: 1, name: 'Nguyễn Văn A', deliveries: 156, rating: 4.9, revenue: 12500 },
-    { id: 2, name: 'Trần Thị B', deliveries: 142, rating: 4.8, revenue: 11800 },
-    { id: 3, name: 'Lê Văn C', deliveries: 138, rating: 4.7, revenue: 11200 },
-    { id: 4, name: 'Phạm Thị D', deliveries: 125, rating: 4.9, revenue: 10500 },
-    { id: 5, name: 'Hoàng Văn E', deliveries: 118, rating: 4.6, revenue: 9800 },
+    { id: 1, name: 'Nguyễn Văn A', deliveries: 156, rating: 4.9, revenue: 1250000 },
+    { id: 2, name: 'Trần Thị B', deliveries: 142, rating: 4.8, revenue: 1180000 },
+    { id: 3, name: 'Lê Văn C', deliveries: 138, rating: 4.7, revenue: 1120000 },
+    { id: 4, name: 'Phạm Thị D', deliveries: 125, rating: 4.9, revenue: 1050000 },
+    { id: 5, name: 'Hoàng Văn E', deliveries: 118, rating: 4.6, revenue: 980000 },
   ];
 
   const menuItems = [
@@ -67,7 +90,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium">Total Revenue</p>
-                <h3 className="text-3xl font-bold mt-2">${stats.totalRevenue.toLocaleString()}</h3>
+                <h3 className="text-3xl font-bold mt-2">{stats.totalRevenue.toLocaleString('vi-VN')}₫</h3>
                 <p className="text-purple-100 text-sm mt-2 flex items-center">
                   <TrendingUp className="w-4 h-4 mr-1" />
                   +{stats.revenueGrowth}% from last month
@@ -118,18 +141,24 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Revenue Chart */}
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue & Orders (Last 7 Days)</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue & Orders Trend (December 2025)</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={revenueData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis yAxisId="left" stroke="#8b5cf6" />
+                <YAxis yAxisId="left" stroke="#8b5cf6" tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`} />
                 <YAxis yAxisId="right" orientation="right" stroke="#3b82f6" />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
+                  }}
+                  formatter={(value: any, name: string) => {
+                    if (name === 'Revenue (₫)') {
+                      return [Number(value).toLocaleString('vi-VN') + '₫', name];
+                    }
+                    return [value, name];
                   }}
                 />
                 <Legend />
@@ -139,7 +168,7 @@ export default function AdminDashboard() {
                   dataKey="revenue"
                   stroke="#8b5cf6"
                   strokeWidth={3}
-                  name="Revenue ($)"
+                  name="Revenue (₫)"
                 />
                 <Line
                   yAxisId="right"
@@ -222,7 +251,7 @@ export default function AdminDashboard() {
                       <span className="text-yellow-500 font-semibold">★ {courier.rating}</span>
                     </td>
                     <td className="py-4 px-4 text-right">
-                      <span className="text-gray-900 font-semibold">${courier.revenue.toLocaleString()}</span>
+                      <span className="text-gray-900 font-semibold">{courier.revenue.toLocaleString('vi-VN')}₫</span>
                     </td>
                   </tr>
                 ))}

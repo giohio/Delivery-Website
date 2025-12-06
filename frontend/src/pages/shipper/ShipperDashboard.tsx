@@ -81,27 +81,47 @@ const ShipperDashboard: React.FC = () => {
       // Recent deliveries (last 5)
       setRecentDeliveries(deliveries.slice(0, 5));
 
-      // Earnings chart data (last 7 days)
-      const last7Days = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (6 - i));
-        return date.toISOString().split('T')[0];
-      });
+      // Earnings chart data from wallet transactions (last 7 days)
+      try {
+        const transactionsResponse = await walletApi.getTransactions();
+        const transactions = transactionsResponse.transactions || [];
+        
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() - (6 - i));
+          return date.toISOString().split('T')[0];
+        });
 
-      const earningsMap = new Map();
-      deliveries.forEach((d: any) => {
-        const date = new Date(d.created_at).toISOString().split('T')[0];
-        if (last7Days.includes(date) && d.status === 'delivered') {
-          earningsMap.set(date, (earningsMap.get(date) || 0) + (d.courier_fee || 0));
-        }
-      });
+        const earningsMap = new Map();
+        // Sum CREDIT transactions (earnings) by date
+        transactions
+          .filter((t: any) => t.type === 'CREDIT')
+          .forEach((t: any) => {
+            const date = new Date(t.created_at).toISOString().split('T')[0];
+            if (last7Days.includes(date)) {
+              earningsMap.set(date, (earningsMap.get(date) || 0) + parseFloat(t.amount));
+            }
+          });
 
-      const chartData = last7Days.map(date => ({
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        earnings: earningsMap.get(date) || 0,
-      }));
+        const chartData = last7Days.map(date => ({
+          date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          earnings: earningsMap.get(date) || 0,
+        }));
 
-      setEarningsData(chartData);
+        setEarningsData(chartData);
+      } catch (err) {
+        console.error('Failed to load transactions for chart:', err);
+        // Set empty chart data if transactions fail
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const date = new Date();
+          date.setDate(date.getDate() - (6 - i));
+          return {
+            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            earnings: 0,
+          };
+        });
+        setEarningsData(last7Days);
+      }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {

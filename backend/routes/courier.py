@@ -114,8 +114,8 @@ def update_courier_profile(current_user):
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Update user basic info
-        full_name = data.get('fullName')
+        # Update user basic info (support both camelCase and snake_case)
+        full_name = data.get('fullName') or data.get('full_name')
         phone = data.get('phone')
         
         if full_name:
@@ -125,7 +125,7 @@ def update_courier_profile(current_user):
                 WHERE user_id = %s
             """, (full_name, phone, current_user['user_id']))
         
-        # Update or insert shipper profile
+        # Update or insert shipper profile (support both camelCase and snake_case)
         cur.execute("""
             INSERT INTO app.shipper_profiles (
                 shipper_id,
@@ -161,18 +161,18 @@ def update_courier_profile(current_user):
                 verification_status = 'pending'
         """, (
             current_user['user_id'],
-            data.get('operatingArea', ''),
-            data.get('vehicleType', 'motorbike'),
-            data.get('licensePlate', ''),
-            data.get('idNumber', ''),
-            data.get('driverLicense', ''),
-            data.get('bankName', ''),
-            data.get('accountNumber', ''),
-            data.get('accountName', ''),
-            data.get('idFrontImage', ''),
-            data.get('idBackImage', ''),
-            data.get('licenseImage', ''),
-            data.get('vehicleImage', ''),
+            data.get('operatingArea') or data.get('operating_area', ''),
+            data.get('vehicleType') or data.get('vehicle_type', 'motorbike'),
+            data.get('licensePlate') or data.get('license_plate', ''),
+            data.get('idNumber') or data.get('id_number', ''),
+            data.get('driverLicense') or data.get('driver_license', ''),
+            data.get('bankName') or data.get('bank_name', ''),
+            data.get('accountNumber') or data.get('account_number', ''),
+            data.get('accountName') or data.get('account_name', ''),
+            data.get('idFrontImage') or data.get('id_front_image', ''),
+            data.get('idBackImage') or data.get('id_back_image', ''),
+            data.get('licenseImage') or data.get('license_image', ''),
+            data.get('vehicleImage') or data.get('vehicle_image', ''),
         ))
         
         conn.commit()
