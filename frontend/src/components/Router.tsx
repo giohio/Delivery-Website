@@ -4,7 +4,6 @@ import { ScrollToTop } from '@/lib/scroll-to-top';
 import ErrorPage from '../../intergration/errorHandlers/ErrorPage';
 import HomePage from './HomePage';
 import Login from '../pages/Login';
-import ShipperDashboard from '../pages/ShipperDashboardModern';
 import MerchantDashboard from '../pages/MerchantDashboardNew';
 import MerchantSettings from '../pages/merchant/MerchantSettings';
 import { AutoCustomerRoute } from './AutoCustomerRoute';
@@ -29,9 +28,10 @@ import AdminCouriers from '../pages/admin/AdminCouriers';
 import AdminReports from '../pages/admin/AdminReports';
 import AdminKYCApproval from '../pages/admin/AdminKYCApproval';
 import AdminSettings from '../pages/admin/AdminSettings';
+import RoleApprovals from '../pages/admin/RoleApprovals';
 
-// Shipper Pages (người giao hàng)
-import ShipperDashboardPage from '../pages/shipper/ShipperDashboard';
+// Shipper Pages (người giao hàng) - Use orange theme dashboard
+import ShipperDashboard from '../pages/shipper/ShipperDashboard';
 import ShipperAvailableOrdersPage from '../pages/shipper/ShipperAvailableOrdersPage';
 import ShipperDeliveriesPage from '../pages/shipper/ShipperDeliveries';
 import ShipperEarningsPage from '../pages/shipper/ShipperEarnings';
@@ -40,7 +40,8 @@ import ShipperSettings from '../pages/shipper/ShipperSettings';
 
 // Layout component that includes ScrollToTop
 function Layout() {
-  console.log('Layout rendering');
+  console.log('=== ROUTER LAYOUT LOADED ===');
+  console.log('Routes available:', router.routes);
   return (
     <>
       <ScrollToTop />
@@ -116,6 +117,7 @@ const router = createBrowserRouter([
             <CustomerProfile />
           </MemberProtectedRoute>
         ),
+      },
       {
         path: "customer/coupons",
         element: (
@@ -131,7 +133,6 @@ const router = createBrowserRouter([
             <CustomerSettings />
           </MemberProtectedRoute>
         ),
-      },),
       },
       // Old routes (backward compatibility)
       {
@@ -171,7 +172,7 @@ const router = createBrowserRouter([
         path: "shipper/dashboard",
         element: (
           <MemberProtectedRoute allowedRoles={['shipper']} messageToSignIn="Đăng nhập để truy cập trang shipper">
-            <ShipperDashboardPage />
+            <ShipperDashboard />
           </MemberProtectedRoute>
         ),
       },
@@ -220,7 +221,7 @@ const router = createBrowserRouter([
         path: "courier/dashboard",
         element: (
           <MemberProtectedRoute allowedRoles={['shipper']} messageToSignIn="Đăng nhập để truy cập trang shipper">
-            <ShipperDashboardPage />
+            <ShipperDashboard />
           </MemberProtectedRoute>
         ),
       },
@@ -282,6 +283,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "merchant/dashboard",
+        element: (
+          <MemberProtectedRoute allowedRoles={['merchant']} messageToSignIn="Đăng nhập để truy cập trang merchant">
+            <MerchantDashboard />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
         path: "dashboard/merchant",
         element: (
           <MemberProtectedRoute messageToSignIn="Đăng nhập để truy cập bảng điều khiển merchant">
@@ -298,6 +307,28 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "test-api-keys-route",
+        element: (
+          <div style={{ padding: '50px', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '32px', color: '#2563eb', marginBottom: '20px' }}>
+              ✅ Routing Works!
+            </h1>
+            <p style={{ fontSize: '18px', color: '#6b7280', marginBottom: '30px' }}>
+              If you see this page, the routing system is working correctly.
+            </p>
+            <div style={{ background: '#f3f4f6', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
+              <p><strong>Next steps:</strong></p>
+              <ol style={{ textAlign: 'left', display: 'inline-block' }}>
+                <li>Login as merchant at <a href="/login">/login</a></li>
+                <li>Email: merchant1@example.com</li>
+                <li>Password: merchant123</li>
+                <li>Then go to <a href="/merchant/api-keys">/merchant/api-keys</a></li>
+              </ol>
+            </div>
+          </div>
+        ),
+      },
+      {
         path: "admin",
         element: (
           <MemberProtectedRoute allowedRoles={['admin']} messageToSignIn="Đăng nhập để truy cập trang admin">
@@ -310,6 +341,18 @@ const router = createBrowserRouter([
         element: (
           <MemberProtectedRoute allowedRoles={['admin']} messageToSignIn="Đăng nhập để truy cập trang admin">
             <AdminDashboard />
+          </MemberProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/role-approvals",
+        element: <RoleApprovals />,
+      },
+      {
+        path: "admin/role-approvals-protected",
+        element: (
+          <MemberProtectedRoute allowedRoles={['admin']} messageToSignIn="Đăng nhập để truy cập trang admin">
+            <RoleApprovals />
           </MemberProtectedRoute>
         ),
       },

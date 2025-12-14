@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { notificationApi } from '../services/notificationApi';
+import RoleSwitcher from '../components/common/RoleSwitcher';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -250,6 +251,9 @@ export default function DashboardLayout({ children, role, menuItems }: Dashboard
                 </div>
               )}
             </div>
+
+            {/* Role Switcher */}
+            <RoleSwitcher />
 
             {/* User Menu */}
             <div className="relative">

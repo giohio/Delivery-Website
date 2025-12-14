@@ -3,6 +3,7 @@ from db import get_db_connection
 from utils.auth import token_required
 import secrets
 import hashlib
+import json
 from datetime import datetime, timedelta
 
 api_keys_bp = Blueprint('api_keys', __name__, url_prefix='/api/api-keys')
@@ -105,10 +106,10 @@ def create_api_key(current_user):
                 rate_limit,
                 expires_at
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s::jsonb, %s, %s)
             RETURNING api_key_id, created_at
         """, (key_name, api_key, hashed_secret, current_user['user_id'], 
-              permissions, rate_limit, expires_at))
+              json.dumps(permissions), rate_limit, expires_at))
         
         result = cur.fetchone()
         conn.commit()
@@ -165,8 +166,8 @@ def update_api_key(current_user, api_key_id):
             params.append(data['key_name'])
         
         if 'permissions' in data:
-            updates.append('permissions = %s')
-            params.append(data['permissions'])
+            updates.append('permissions = %s::jsonb')
+            params.append(json.dumps(data['permissions']))
         
         if 'rate_limit' in data:
             updates.append('rate_limit = %s')

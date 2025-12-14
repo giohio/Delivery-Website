@@ -8,7 +8,6 @@ import {
   Settings,
   Lock,
   Bell,
-  Globe,
   Eye,
   EyeOff,
   Shield,

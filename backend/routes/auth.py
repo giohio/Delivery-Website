@@ -104,6 +104,18 @@ def register():
         row = cur.fetchone()
         user_id = row['user_id']
         
+        # Create user_role entry (for multi-role support)
+        cur.execute("""
+            INSERT INTO app.user_roles (user_id, role_id, is_active, approved_at)
+            VALUES (%s, %s, TRUE, NOW())
+            ON CONFLICT (user_id, role_id) DO NOTHING;
+        """, (user_id, role_id))
+        
+        # Set current_role_id
+        cur.execute("""
+            UPDATE app.users SET current_role_id = %s WHERE user_id = %s
+        """, (role_id, user_id))
+        
         # If customer, create wallet with initial balance
         if role == 'customer':
             cur.execute("""
@@ -145,7 +157,7 @@ def login():
     # allow login by username or email
     cur.execute(
         """
-        SELECT user_id, username, email, password_hash, role_id, is_active
+        SELECT user_id, username, email, password_hash, role_id, is_active, current_role_id
         FROM app.users
         WHERE username = %s OR email = %s
         """,
@@ -164,6 +176,9 @@ def login():
         cur.close(); conn.close()
         return jsonify({"ok": False, "error": "Invalid credentials"}), 401
 
+    # Get current role or default to role_id
+    current_role_id = user.get("current_role_id") or user["role_id"]
+
     # create JWT and store in api_tokens
     token = create_jwt({"sub": str(user["user_id"]), "username": user["username"], "role_id": user["role_id"]})
     save_token(user["user_id"], token)
@@ -177,7 +192,8 @@ def login():
             "user_id": user["user_id"],
             "username": user["username"],
             "email": user["email"],
-            "role_id": user["role_id"]
+            "role_id": user["role_id"],
+            "current_role_id": current_role_id
         }
     })
 

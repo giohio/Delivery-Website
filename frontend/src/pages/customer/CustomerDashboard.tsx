@@ -17,6 +17,7 @@ import {
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { orderApi } from '../../services/orderApi';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import BecomePartner from '../../components/customer/BecomePartner';
 
 const menuItems = [
   { path: '/customer/dashboard', icon: <LayoutDashboard />, label: 'Dashboard' },
@@ -409,6 +410,16 @@ export default function CustomerDashboard() {
           </div>
         </motion.button>
       </div>
+
+      {/* Become Partner Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mt-8"
+      >
+        <BecomePartner />
+      </motion.div>
     </DashboardLayout>
   );
 }

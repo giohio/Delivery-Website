@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Package, Users, DollarSign, TrendingUp, ShoppingBag, Truck, AlertCircle, CheckCircle, BarChart3 } from 'lucide-react';
 import DashboardLayout from '../../layouts/DashboardLayout';
+import RoleApprovalsSection from '../../components/admin/RoleApprovalsSection';
 
 export default function AdminDashboard() {
   const [stats] = useState({
@@ -274,6 +275,9 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Role Approvals Section */}
+        <RoleApprovalsSection />
       </div>
     </DashboardLayout>
   );
