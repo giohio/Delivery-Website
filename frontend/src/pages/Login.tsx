@@ -93,15 +93,21 @@ const Login: React.FC = () => {
       const backendUser = data.user;
       const currentRoleId = backendUser?.current_role_id || backendUser?.role_id || 4;
       const displayName = backendUser?.username || backendUser?.full_name || (formData.email.split('@')[0]);
-      const roleName = await getRoleName(backendUser?.role_id || 4);
+      // Use role_name from backend if available, otherwise fallback to mapping
+      const roleName = backendUser?.role_name || await getRoleName(backendUser?.role_id || 4);
       
       const userData = {
         email: backendUser?.email || formData.email,
         fullName: displayName,
         role_id: backendUser?.role_id,
         role_name: roleName,
-        user_id: backendUser?.user_id
+        user_id: backendUser?.user_id,
+        username: backendUser?.username,
+        full_name: backendUser?.full_name
       };
+      
+      console.log('Login successful - User data:', userData);
+      console.log('Redirecting with role_name:', roleName, 'role_id:', currentRoleId);
       
       login(userData, data.token);
       redirectToRoleDashboard(currentRoleId);

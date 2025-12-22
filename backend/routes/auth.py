@@ -44,9 +44,10 @@ def get_user_from_token(token: str):
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
         """
-        SELECT t.user_id, t.expires_at, t.revoked, u.username, u.email, u.role_id
+        SELECT t.user_id, t.expires_at, t.revoked, u.username, u.email, u.role_id, u.full_name, r.role_name
         FROM app.api_tokens t
         JOIN app.users u ON u.user_id = t.user_id
+        JOIN app.roles r ON u.role_id = r.role_id
         WHERE t.token = %s
         """,
         (token,)
@@ -157,9 +158,10 @@ def login():
     # allow login by username or email
     cur.execute(
         """
-        SELECT user_id, username, email, password_hash, role_id, is_active, current_role_id
-        FROM app.users
-        WHERE username = %s OR email = %s
+        SELECT u.user_id, u.username, u.email, u.password_hash, u.role_id, u.is_active, u.current_role_id, u.full_name, r.role_name
+        FROM app.users u
+        JOIN app.roles r ON u.role_id = r.role_id
+        WHERE u.username = %s OR u.email = %s
         """,
         (username_or_email, username_or_email)
     )
@@ -192,7 +194,9 @@ def login():
             "user_id": user["user_id"],
             "username": user["username"],
             "email": user["email"],
+            "full_name": user["full_name"],
             "role_id": user["role_id"],
+            "role_name": user["role_name"],
             "current_role_id": current_role_id
         }
     })
@@ -224,7 +228,9 @@ def me():
             "user_id": user_row["user_id"],
             "username": user_row["username"],
             "email": user_row["email"],
-            "role_id": user_row["role_id"]
+            "full_name": user_row.get("full_name"),
+            "role_id": user_row["role_id"],
+            "role_name": user_row.get("role_name")
         }
     })
 

@@ -62,10 +62,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Save role-based default path
     const roleRoutes: Record<string, string> = {
-      customer: '/customer',
-      shipper: '/shipper',
-      merchant: '/dashboard/merchant',
-      admin: '/admin'
+      customer: '/customer/dashboard',
+      shipper: '/shipper/dashboard',
+      merchant: '/merchant/dashboard',
+      admin: '/admin/dashboard'
     };
     const defaultPath = roleRoutes[userData.role_name || ''] || '/';
     sessionStorage.setItem('lastPath', defaultPath);
