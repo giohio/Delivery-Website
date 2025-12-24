@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -40,6 +40,24 @@ export const walletApi = {
     const response = await axios.get(`${API_BASE_URL}/wallet/transactions`, {
       headers: getAuthHeader(),
     });
+    return response.data;
+  },
+
+  // Verify payment after QR transfer
+  verifyPayment: async (transactionRef: string, amount: number) => {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/payment/verify`,
+      {
+        transaction_ref: transactionRef,
+        amount: amount,
+      },
+      {
+        headers: {
+          ...getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      }
+    );
     return response.data;
   },
 };

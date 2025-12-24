@@ -4,11 +4,14 @@ export interface User {
   email?: string;
   username?: string;
   fullName?: string;
+  full_name?: string;
   phone?: string;
   avatar?: string;
   role_id?: number;
   role_name?: string;
   user_id?: number;
+  created_at?: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -19,6 +22,7 @@ interface AuthContextType {
   logout: () => void;
   getToken: () => string | null;
   getUserRole: () => string | null;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,23 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from sessionStorage (tab-specific) or localStorage (fallback)
+  // Load user from sessionStorage only (tab-specific session)
   useEffect(() => {
-    // First check sessionStorage (tab-specific)
-    let savedUser = sessionStorage.getItem('user');
-    let savedToken = sessionStorage.getItem('token');
-    
-    // If not in sessionStorage, check localStorage (for persistence across sessions)
-    if (!savedUser || !savedToken) {
-      savedUser = localStorage.getItem('user');
-      savedToken = localStorage.getItem('token');
-      
-      // If found in localStorage, copy to sessionStorage for this tab
-      if (savedUser && savedToken) {
-        sessionStorage.setItem('user', savedUser);
-        sessionStorage.setItem('token', savedToken);
-      }
-    }
+    const savedUser = sessionStorage.getItem('user');
+    const savedToken = sessionStorage.getItem('token');
     
     if (savedUser && savedToken) {
       try {
@@ -52,8 +43,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to parse saved user:', error);
         sessionStorage.removeItem('user');
         sessionStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
       }
     }
     
@@ -63,48 +52,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (userData: User, token?: string) => {
     setUser(userData);
     
-    // Save to both sessionStorage (tab-specific) and localStorage (persistence)
+    // Save to sessionStorage only (tab-specific session)
     const userJson = JSON.stringify(userData);
     sessionStorage.setItem('user', userJson);
-    localStorage.setItem('user', userJson);
     
     if (token) {
       sessionStorage.setItem('token', token);
-      localStorage.setItem('token', token);
     }
     
     // Save role-based default path
     const roleRoutes: Record<string, string> = {
-      customer: '/customer',
-      shipper: '/shipper',
-      merchant: '/dashboard/merchant',
-      admin: '/admin'
+      customer: '/customer/dashboard',
+      shipper: '/shipper/dashboard',
+      merchant: '/merchant/dashboard',
+      admin: '/admin/dashboard'
     };
     const defaultPath = roleRoutes[userData.role_name || ''] || '/';
     sessionStorage.setItem('lastPath', defaultPath);
-    localStorage.setItem('lastPath', defaultPath);
   };
 
   const logout = () => {
     setUser(null);
     
-    // Clear both sessionStorage and localStorage
+    // Clear sessionStorage only
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('lastPath');
-    
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('lastPath');
   };
 
   const getToken = () => {
-    // Check sessionStorage first (tab-specific), then localStorage
-    return sessionStorage.getItem('token') || localStorage.getItem('token');
+    // Get token from sessionStorage only
+    return sessionStorage.getItem('token');
   };
 
   const getUserRole = () => {
     return user?.role_name || null;
+  };
+
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      sessionStorage.setItem('user', JSON.stringify(updatedUser));
+    }
   };
 
   // Show loading spinner while checking authentication
@@ -148,7 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         getToken,
-        getUserRole
+        getUserRole,
+        updateUser
       }}
     >
       {children}

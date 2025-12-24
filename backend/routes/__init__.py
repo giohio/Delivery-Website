@@ -38,5 +38,4 @@ def register_routes(app):
         except Exception as e:
             return jsonify({"ok": False, "error": str(e)}), 500
 
-    # REGISTER AUTH BLUEPRINT
-    app.register_blueprint(auth_bp)
+    # AUTH BLUEPRINT is already registered in app.py, no need to register here

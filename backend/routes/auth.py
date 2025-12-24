@@ -44,9 +44,10 @@ def get_user_from_token(token: str):
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(
         """
-        SELECT t.user_id, t.expires_at, t.revoked, u.username, u.email, u.role_id
+        SELECT t.user_id, t.expires_at, t.revoked, u.username, u.email, u.role_id, u.full_name, r.role_name
         FROM app.api_tokens t
         JOIN app.users u ON u.user_id = t.user_id
+        JOIN app.roles r ON u.role_id = r.role_id
         WHERE t.token = %s
         """,
         (token,)
@@ -102,6 +103,38 @@ def register():
             (username, pwd_hash, email, phone, full_name, role_id)
         )
         row = cur.fetchone()
+        user_id = row['user_id']
+        
+        # Create user_role entry (for multi-role support)
+        cur.execute("""
+            INSERT INTO app.user_roles (user_id, role_id, is_active, approved_at)
+            VALUES (%s, %s, TRUE, NOW())
+            ON CONFLICT (user_id, role_id) DO NOTHING;
+        """, (user_id, role_id))
+        
+        # Set current_role_id
+        cur.execute("""
+            UPDATE app.users SET current_role_id = %s WHERE user_id = %s
+        """, (role_id, user_id))
+        
+        # If customer, create wallet with initial balance
+        if role == 'customer':
+            cur.execute("""
+                INSERT INTO app.wallets (user_id, balance)
+                VALUES (%s, 0)
+                ON CONFLICT (user_id) DO NOTHING;
+            """, (user_id,))
+            print(f"[Register] Created wallet for customer user_id={user_id}")
+        
+        # If shipper, create shipper wallet
+        elif role == 'shipper':
+            cur.execute("""
+                INSERT INTO app.shipper_wallets (shipper_id, balance)
+                VALUES (%s, 0)
+                ON CONFLICT (shipper_id) DO NOTHING;
+            """, (user_id,))
+            print(f"[Register] Created shipper wallet for user_id={user_id}")
+        
         conn.commit()
         return jsonify({"ok": True, "user": row}), 201
     except Exception as e:
@@ -125,9 +158,10 @@ def login():
     # allow login by username or email
     cur.execute(
         """
-        SELECT user_id, username, email, password_hash, role_id, is_active
-        FROM app.users
-        WHERE username = %s OR email = %s
+        SELECT u.user_id, u.username, u.email, u.password_hash, u.role_id, u.is_active, u.current_role_id, u.full_name, r.role_name
+        FROM app.users u
+        JOIN app.roles r ON u.role_id = r.role_id
+        WHERE u.username = %s OR u.email = %s
         """,
         (username_or_email, username_or_email)
     )
@@ -144,6 +178,9 @@ def login():
         cur.close(); conn.close()
         return jsonify({"ok": False, "error": "Invalid credentials"}), 401
 
+    # Get current role or default to role_id
+    current_role_id = user.get("current_role_id") or user["role_id"]
+
     # create JWT and store in api_tokens
     token = create_jwt({"sub": str(user["user_id"]), "username": user["username"], "role_id": user["role_id"]})
     save_token(user["user_id"], token)
@@ -157,7 +194,10 @@ def login():
             "user_id": user["user_id"],
             "username": user["username"],
             "email": user["email"],
-            "role_id": user["role_id"]
+            "full_name": user["full_name"],
+            "role_id": user["role_id"],
+            "role_name": user["role_name"],
+            "current_role_id": current_role_id
         }
     })
 
@@ -188,7 +228,9 @@ def me():
             "user_id": user_row["user_id"],
             "username": user_row["username"],
             "email": user_row["email"],
-            "role_id": user_row["role_id"]
+            "full_name": user_row.get("full_name"),
+            "role_id": user_row["role_id"],
+            "role_name": user_row.get("role_name")
         }
     })
 

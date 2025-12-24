@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -84,6 +84,18 @@ export const deliveryApi = {
   getDeliveryTracking: async (deliveryId: number) => {
     const response = await axios.get(
       `${API_BASE_URL}/deliveries/${deliveryId}/tracking`,
+      {
+        headers: getAuthHeader(),
+      }
+    );
+    return response.data;
+  },
+
+  // Accept an order (create delivery with single order)
+  acceptOrder: async (orderId: number) => {
+    const response = await axios.post(
+      `${API_BASE_URL}/deliveries`,
+      { order_ids: [orderId] },
       {
         headers: getAuthHeader(),
       }

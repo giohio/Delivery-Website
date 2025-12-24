@@ -20,9 +20,9 @@ const Login: React.FC = () => {
       setLoading(true);
       setError(null);
       const userData = await signInWithGoogle();
-      const roleName = userData.role_name || 'customer';
+      const roleId = userData.role_id || 4;
       login(userData);
-      redirectToRoleDashboard(roleName);
+      redirectToRoleDashboard(roleId);
     } catch (err: any) {
       setError(err.message || 'Google login failed');
       console.error('Google login error:', err);
@@ -36,9 +36,9 @@ const Login: React.FC = () => {
       setLoading(true);
       setError(null);
       const userData = await signInWithFacebook();
-      const roleName = userData.role_name || 'customer';
+      const roleId = userData.role_id || 4;
       login(userData);
-      redirectToRoleDashboard(roleName);
+      redirectToRoleDashboard(roleId);
     } catch (err: any) {
       setError(err.message || 'Facebook login failed');
       console.error('Facebook login error:', err);
@@ -60,24 +60,17 @@ const Login: React.FC = () => {
     return roleMap[roleId] || 'customer';
   };
 
-  // Helper function to redirect based on role
-  const redirectToRoleDashboard = (roleName: string) => {
-    switch (roleName.toLowerCase()) {
-      case 'admin':
-        navigate('/admin');
-        break;
-      case 'merchant':
-        navigate('/merchant');
-        break;
-      case 'shipper':
-      case 'courier':
-        navigate('/courier');
-        break;
-      case 'customer':
-      default:
-        navigate('/customer');
-        break;
-    }
+  // Helper function to redirect based on role ID
+  const redirectToRoleDashboard = (roleId: number) => {
+    const roleRedirects: { [key: number]: string } = {
+      1: '/admin/dashboard',
+      2: '/merchant/dashboard',
+      3: '/shipper/dashboard',
+      4: '/customer/dashboard',
+    };
+    const path = roleRedirects[roleId] || '/customer/dashboard';
+    console.log(`Redirecting to ${path} for role_id ${roleId}`);
+    navigate(path);
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -95,22 +88,29 @@ const Login: React.FC = () => {
         throw new Error(data.error || 'Login failed');
       }
       if (data.token) {
-        localStorage.setItem('token', data.token);
+        sessionStorage.setItem('token', data.token);
       }
       const backendUser = data.user;
+      const currentRoleId = backendUser?.current_role_id || backendUser?.role_id || 4;
       const displayName = backendUser?.username || backendUser?.full_name || (formData.email.split('@')[0]);
-      const roleName = await getRoleName(backendUser?.role_id || 4);
+      // Use role_name from backend if available, otherwise fallback to mapping
+      const roleName = backendUser?.role_name || await getRoleName(backendUser?.role_id || 4);
       
       const userData = {
         email: backendUser?.email || formData.email,
         fullName: displayName,
         role_id: backendUser?.role_id,
         role_name: roleName,
-        user_id: backendUser?.user_id
+        user_id: backendUser?.user_id,
+        username: backendUser?.username,
+        full_name: backendUser?.full_name
       };
       
+      console.log('Login successful - User data:', userData);
+      console.log('Redirecting with role_name:', roleName, 'role_id:', currentRoleId);
+      
       login(userData, data.token);
-      redirectToRoleDashboard(roleName);
+      redirectToRoleDashboard(currentRoleId);
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {

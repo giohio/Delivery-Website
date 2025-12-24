@@ -67,7 +67,7 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
       throw new Error(data.error || 'Đăng nhập Firebase thất bại');
     }
     if (data.token) {
-      localStorage.setItem('token', data.token);
+      sessionStorage.setItem('token', data.token);
     }
     // Get role_name from backend response
     const getRoleName = (roleId: number): string => {
@@ -119,7 +119,7 @@ export const signInWithFacebook = async (): Promise<AuthUser> => {
       throw new Error(data.error || 'Đăng nhập Firebase thất bại');
     }
     if (data.token) {
-      localStorage.setItem('token', data.token);
+      sessionStorage.setItem('token', data.token);
     }
     // Get role_name from backend response
     const getRoleName = (roleId: number): string => {

@@ -27,20 +27,11 @@ export function MemberProtectedRoute({
     );
 
     if (!hasPermission) {
-      // Redirect to appropriate dashboard based on user's role
-      switch (userRole) {
-        case 'admin':
-          return <Navigate to="/admin" replace />;
-        case 'merchant':
-          return <Navigate to="/merchant" replace />;
-        case 'shipper':
-        case 'courier':
-          return <Navigate to="/courier" replace />;
-        case 'customer':
-          return <Navigate to="/customer" replace />;
-        default:
-          return <Navigate to="/login" replace />;
-      }
+      console.log(`Access denied. User role: ${userRole}, Required: ${allowedRoles.join(', ')}`);
+      // Don't redirect - just show access denied or let the user see empty dashboard
+      // The RoleSwitcher will allow them to switch to correct role
+      // Commenting out the redirect to prevent loop
+      // return <Navigate to="/customer" replace />;
     }
   }
 

@@ -163,7 +163,7 @@ export function DriverSection() {
           </h3>
           
           <Card className="bg-white/80 backdrop-blur-lg border border-gray-200 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
