@@ -29,6 +29,129 @@ def is_admin(session):
 
 # ---- Endpoints ----
 
+# KYC Management
+@admin_bp.get("/kyc/pending")
+def get_pending_kyc():
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("""
+        SELECT 
+            k.id, k.shipper_id, u.full_name, u.email, u.phone,
+            k.id_number, k.id_front_image, k.id_back_image,
+            k.driver_license, k.license_image,
+            k.vehicle_type, k.license_plate, k.vehicle_image,
+            k.verification_status, k.created_at as submitted_at
+        FROM app.kyc_submissions k
+        JOIN app.users u ON k.shipper_id = u.user_id
+        WHERE k.verification_status = 'pending'
+        ORDER BY k.created_at DESC;
+    """)
+    submissions = cur.fetchall()
+    cur.close(); conn.close()
+    return jsonify({"ok": True, "submissions": submissions})
+
+@admin_bp.get("/kyc/all")
+def get_all_kyc():
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    status = request.args.get('status')  # pending, approved, rejected, or None for all
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    query = """
+        SELECT 
+            k.id, k.shipper_id, u.full_name, u.email, u.phone,
+            k.id_number, k.id_front_image, k.id_back_image,
+            k.driver_license, k.license_image,
+            k.vehicle_type, k.license_plate, k.vehicle_image,
+            k.verification_status, k.rejection_reason,
+            k.created_at as submitted_at, k.verified_at
+        FROM app.kyc_submissions k
+        JOIN app.users u ON k.shipper_id = u.user_id
+    """
+    
+    if status:
+        query += " WHERE k.verification_status = %s"
+        cur.execute(query + " ORDER BY k.created_at DESC;", (status,))
+    else:
+        cur.execute(query + " ORDER BY k.created_at DESC;")
+    
+    submissions = cur.fetchall()
+    cur.close(); conn.close()
+    return jsonify({"ok": True, "submissions": submissions})
+
+@admin_bp.put("/kyc/<int:user_id>/approve")
+def approve_kyc(user_id):
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Update verification status
+    cur.execute("""
+        UPDATE app.kyc_submissions
+        SET verification_status = 'approved',
+            verified_at = NOW(),
+            updated_at = NOW()
+        WHERE shipper_id = %s;
+    """, (user_id,))
+    
+    # Get user email for notification
+    cur.execute("SELECT email, full_name FROM app.users WHERE user_id = %s;", (user_id,))
+    user = cur.fetchone()
+    
+    conn.commit()
+    cur.close(); conn.close()
+    
+    # Send notification
+    if user:
+        push_notification(user_id, "KYC Approved", f"Congratulations {user[1]}! Your KYC verification has been approved.")
+    
+    return jsonify({"ok": True, "message": "KYC approved successfully"})
+
+@admin_bp.put("/kyc/<int:user_id>/reject")
+def reject_kyc(user_id):
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    data = request.get_json()
+    reason = data.get('reason', 'Document verification failed')
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Update verification status
+    cur.execute("""
+        UPDATE app.kyc_submissions
+        SET verification_status = 'rejected',
+            rejection_reason = %s,
+            updated_at = NOW()
+        WHERE shipper_id = %s;
+    """, (reason, user_id))
+    
+    # Get user email
+    cur.execute("SELECT email, full_name FROM app.users WHERE user_id = %s;", (user_id,))
+    user = cur.fetchone()
+    
+    conn.commit()
+    cur.close(); conn.close()
+    
+    # Send notification
+    if user:
+        push_notification(user_id, "KYC Rejected", f"Sorry {user[1]}, your KYC verification was rejected. Reason: {reason}")
+    
+    return jsonify({"ok": True, "message": "KYC rejected"})
+
 # summary (counts)
 @admin_bp.get("/summary")
 def dashboard_summary():
@@ -71,6 +194,130 @@ def list_users():
     cur.close(); conn.close()
 
     return jsonify({"ok": True, "users": users})
+
+
+# create new user
+@admin_bp.post("/users")
+def create_user():
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        print(f"[Admin Create User] Auth failed: {err}")
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+
+    data = request.get_json(force=True)
+    print(f"[Admin Create User] Received data: {data}")
+    
+    full_name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    phone = data.get("phone", "").strip()
+    password = data.get("password", "")
+    role_name = data.get("role", "customer").strip().lower()
+
+    print(f"[Admin Create User] Parsed - Name: {full_name}, Email: {email}, Phone: {phone}, Role: {role_name}")
+
+    if not full_name or not email or not password:
+        error_msg = "Name, email, and password are required"
+        print(f"[Admin Create User] Validation failed: {error_msg}")
+        return jsonify({"ok": False, "error": error_msg}), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    # Get role_id
+    cur.execute("SELECT role_id FROM app.roles WHERE role_name = %s;", (role_name,))
+    r = cur.fetchone()
+    if not r:
+        cur.close(); conn.close()
+        error_msg = f"Role '{role_name}' not found"
+        print(f"[Admin Create User] Role validation failed: {error_msg}")
+        return jsonify({"ok": False, "error": error_msg}), 400
+    role_id = r["role_id"]
+    print(f"[Admin Create User] Found role_id: {role_id} for role: {role_name}")
+
+    # Check if email already exists
+    cur.execute("SELECT user_id FROM app.users WHERE email = %s;", (email,))
+    if cur.fetchone():
+        cur.close(); conn.close()
+        error_msg = "Email already registered"
+        print(f"[Admin Create User] Duplicate email: {email}")
+        return jsonify({"ok": False, "error": error_msg}), 400
+
+    # Hash password
+    from utils.auth import hash_password
+    pwd_hash = hash_password(password)
+
+    # Generate username from email
+    username = email.split('@')[0]
+    
+    # Insert user
+    try:
+        print(f"[Admin Create User] Inserting user - Username: {username}, Email: {email}")
+        cur.execute(
+            """
+            INSERT INTO app.users (username, password_hash, email, phone, full_name, role_id, is_active)
+            VALUES (%s, %s, %s, %s, %s, %s, TRUE)
+            RETURNING user_id, username, email, phone, full_name, role_id, is_active, created_at;
+            """,
+            (username, pwd_hash, email, phone, full_name, role_id)
+        )
+        user = cur.fetchone()
+        user_id = user['user_id']
+        
+        # Create user_role entry (for multi-role support) - ALWAYS add Customer role by default
+        cur.execute("""
+            INSERT INTO app.user_roles (user_id, role_id, is_active, approved_at)
+            VALUES (%s, 4, TRUE, NOW())
+            ON CONFLICT (user_id, role_id) DO NOTHING;
+        """, (user_id,))
+        print(f"[Admin Create User] Added Customer role to user_id={user_id}")
+        
+        # If creating non-customer role, add that role too
+        if role_id != 4:
+            cur.execute("""
+                INSERT INTO app.user_roles (user_id, role_id, is_active, approved_at)
+                VALUES (%s, %s, TRUE, NOW())
+                ON CONFLICT (user_id, role_id) DO NOTHING;
+            """, (user_id, role_id))
+            print(f"[Admin Create User] Added role {role_id} to user_id={user_id}")
+        
+        # Set current_role_id to Customer (default)
+        cur.execute("""
+            UPDATE app.users SET current_role_id = 4 WHERE user_id = %s
+        """, (user_id,))
+        
+        # Create wallet based on role
+        if role_name == 'customer':
+            cur.execute("""
+                INSERT INTO app.wallets (user_id, balance)
+                VALUES (%s, 0)
+                ON CONFLICT (user_id) DO NOTHING;
+            """, (user_id,))
+            print(f"[Admin Create User] Created wallet for customer user_id={user_id}")
+        
+        elif role_name == 'shipper':
+            cur.execute("""
+                INSERT INTO app.shipper_wallets (shipper_id, balance)
+                VALUES (%s, 0)
+                ON CONFLICT (shipper_id) DO NOTHING;
+            """, (user_id,))
+            print(f"[Admin Create User] Created shipper wallet for user_id={user_id}")
+        
+        conn.commit()
+        print(f"[Admin Create User] User created successfully - ID: {user_id}")
+
+        # Get role name for response
+        cur.execute("SELECT role_name FROM app.roles WHERE role_id = %s;", (user["role_id"],))
+        role = cur.fetchone()
+        user["role_name"] = role["role_name"] if role else role_name
+
+        cur.close(); conn.close()
+        return jsonify({"ok": True, "user": user, "message": "User created successfully"})
+    except Exception as e:
+        conn.rollback()
+        cur.close(); conn.close()
+        error_msg = f"Database error: {str(e)}"
+        print(f"[Admin Create User] Database error: {e}")
+        return jsonify({"ok": False, "error": error_msg}), 500
 
 
 # list all orders
@@ -140,3 +387,196 @@ def admin_refund(order_id):
     cur.close(); conn.close()
 
     return jsonify({"ok": True, "payment": payment})
+
+
+# Role Registration Approvals
+@admin_bp.get("/role-registrations/pending")
+def get_pending_role_registrations():
+    """Get all pending role registrations (merchant & shipper)"""
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    # Get pending merchants
+    cur.execute("""
+        SELECT 
+            ur.user_role_id,
+            ur.user_id,
+            ur.role_id,
+            u.full_name,
+            u.email,
+            u.phone,
+            mp.shop_name,
+            mp.shop_address,
+            mp.shop_phone,
+            mp.business_license,
+            mp.is_verified,
+            ur.created_at,
+            'merchant' as registration_type
+        FROM app.user_roles ur
+        JOIN app.users u ON ur.user_id = u.user_id
+        LEFT JOIN app.merchant_profiles mp ON ur.user_id = mp.user_id
+        WHERE ur.role_id = 2 
+        AND ur.approved_at IS NULL
+        ORDER BY ur.created_at DESC
+    """)
+    merchants = cur.fetchall()
+    
+    # Get pending shippers
+    cur.execute("""
+        SELECT 
+            ur.user_role_id,
+            ur.user_id,
+            ur.role_id,
+            u.full_name,
+            u.email,
+            u.phone,
+            NULL as vehicle_type,
+            NULL as license_plate,
+            NULL as id_card_number,
+            FALSE as is_verified,
+            ur.created_at,
+            'shipper' as registration_type
+        FROM app.user_roles ur
+        JOIN app.users u ON ur.user_id = u.user_id
+        WHERE ur.role_id = 3 
+        AND ur.approved_at IS NULL
+        ORDER BY ur.created_at DESC
+    """)
+    shippers = cur.fetchall()
+    
+    cur.close()
+    conn.close()
+    
+    return jsonify({
+        "ok": True, 
+        "merchants": merchants,
+        "shippers": shippers,
+        "total": len(merchants) + len(shippers)
+    })
+
+@admin_bp.put("/role-registrations/<int:user_role_id>/approve")
+def approve_role_registration(user_role_id):
+    """Approve a role registration"""
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    try:
+        # Get user_role info
+        cur.execute("""
+            SELECT user_id, role_id FROM app.user_roles
+            WHERE user_role_id = %s
+        """, (user_role_id,))
+        
+        user_role = cur.fetchone()
+        if not user_role:
+            return jsonify({"ok": False, "error": "Registration not found"}), 404
+        
+        user_id, role_id = user_role
+        
+        # Approve the role
+        cur.execute("""
+            UPDATE app.user_roles 
+            SET approved_at = NOW(), is_active = TRUE
+            WHERE user_role_id = %s
+        """, (user_role_id,))
+        
+        # Update profile verification status
+        if role_id == 2:  # Merchant
+            cur.execute("""
+                UPDATE app.merchant_profiles 
+                SET is_verified = TRUE 
+                WHERE user_id = %s
+            """, (user_id,))
+        # Note: shipper_profiles doesn't have user_id column, skip update
+        # Shipper verification handled separately through KYC process
+        
+        conn.commit()
+        
+        # Send notification
+        role_names = {2: 'Merchant', 3: 'Shipper'}
+        role_name = role_names.get(role_id, 'Role')
+        push_notification(
+            user_id, 
+            f"{role_name} Registration Approved",
+            f"Congratulations! Your {role_name.lower()} registration has been approved."
+        )
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({"ok": True, "message": "Registration approved"})
+        
+    except Exception as e:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+@admin_bp.put("/role-registrations/<int:user_role_id>/reject")
+def reject_role_registration(user_role_id):
+    """Reject a role registration"""
+    session, err = current_session(request)
+    if err or not is_admin(session):
+        return jsonify({"ok": False, "error": "Admin only"}), 403
+    
+    data = request.get_json()
+    reason = data.get('reason', 'Not specified')
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    try:
+        # Get user_role info
+        cur.execute("""
+            SELECT user_id, role_id FROM app.user_roles
+            WHERE user_role_id = %s
+        """, (user_role_id,))
+        
+        user_role = cur.fetchone()
+        if not user_role:
+            return jsonify({"ok": False, "error": "Registration not found"}), 404
+        
+        user_id, role_id = user_role
+        
+        # Delete the role (reject)
+        cur.execute("""
+            DELETE FROM app.user_roles 
+            WHERE user_role_id = %s
+        """, (user_role_id,))
+        
+        # Delete profile
+        if role_id == 2:  # Merchant
+            cur.execute("DELETE FROM app.merchant_profiles WHERE user_id = %s", (user_id,))
+        elif role_id == 3:  # Shipper
+            cur.execute("DELETE FROM app.shipper_profiles WHERE user_id = %s", (user_id,))
+        
+        conn.commit()
+        
+        # Send notification
+        role_names = {2: 'Merchant', 3: 'Shipper'}
+        role_name = role_names.get(role_id, 'Role')
+        push_notification(
+            user_id, 
+            f"{role_name} Registration Rejected",
+            f"Your {role_name.lower()} registration was rejected. Reason: {reason}"
+        )
+        
+        cur.close()
+        conn.close()
+        
+        return jsonify({"ok": True, "message": "Registration rejected"})
+        
+    except Exception as e:
+        conn.rollback()
+        cur.close()
+        conn.close()
+        return jsonify({"ok": False, "error": str(e)}), 500
+

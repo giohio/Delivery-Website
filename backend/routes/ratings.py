@@ -31,8 +31,12 @@ def leave_rating(delivery_id):
     session, err = current_session(request)
     if err:
       return jsonify({"ok": False, "error": err}), 401
-    if role_name(session["role_id"]) != "customer":  
-      return jsonify({"ok": False, "error": "Only customers can leave ratings"}), 403
+    
+    user_role = role_name(session["role_id"])
+    print(f"[DEBUG] leave_rating - user_id: {session['user_id']}, role_id: {session['role_id']}, role_name: {user_role}")
+    
+    if user_role != "customer":  
+      return jsonify({"ok": False, "error": f"Only customers can leave ratings. Your role: {user_role}"}), 403
     data = request.get_json()
     score = data.get("score")
     comment = data.get("comment", "")
@@ -70,11 +74,17 @@ def leave_rating(delivery_id):
     """, (delivery_id, session["user_id"], delivery["shipper_id"], score, comment))
     rating = cur.fetchone()
 
-    # update shipper profile stats
+    # update shipper profile stats - ensure profile exists first
+    cur.execute("""
+        INSERT INTO app.shipper_profiles (shipper_id, rating_count, rating_avg)
+        VALUES (%s, 0, 0)
+        ON CONFLICT (shipper_id) DO NOTHING;
+    """, (delivery["shipper_id"],))
+    
     cur.execute("""
         UPDATE app.shipper_profiles
            SET rating_count = rating_count + 1,
-               rating_avg = ((rating_avg * (rating_count) + %s) / (rating_count + 1))
+               rating_avg = ((rating_avg * rating_count + %s) / (rating_count + 1))
          WHERE shipper_id = %s;
     """, (score, delivery["shipper_id"]))
 

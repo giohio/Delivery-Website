@@ -50,7 +50,12 @@ def available_orders():
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute("SELECT * FROM app.orders WHERE status = 'PENDING' ORDER BY created_at ASC;")
+    # Get only PENDING orders that shippers can accept
+    cur.execute("""
+        SELECT * FROM app.orders 
+        WHERE status = 'PENDING' AND delivery_id IS NULL
+        ORDER BY created_at DESC;
+    """)
     rows = cur.fetchall()
     cur.close(); conn.close()
 
@@ -143,7 +148,16 @@ def update_delivery_status(delivery_id):
     updated = cur.fetchone()
 
     # -------- cascade logic --------
-    if new_status == "COMPLETED":
+    if new_status == "ONGOING":
+        # mark all orders in this delivery as ONGOING
+        cur.execute("""
+            UPDATE app.orders
+               SET status = 'ONGOING'
+             WHERE delivery_id = %s;
+        """, (delivery_id,))
+        print(f"[INFO] Updated orders to ONGOING for delivery_id={delivery_id}")
+    
+    elif new_status == "COMPLETED":
         # mark all orders in this delivery as COMPLETED
         cur.execute("""
             UPDATE app.orders
@@ -152,6 +166,7 @@ def update_delivery_status(delivery_id):
          RETURNING order_id, price_estimate;
         """, (delivery_id,))
         orders = cur.fetchall()
+        print(f"[INFO] Updated {len(orders)} orders to COMPLETED for delivery_id={delivery_id}")
 
         # update payments (CASH → SUCCESS if still pending)
         for o in orders:
